@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Inter:wght@100..900&display=swap');
+
+@layer base {
+  :root {
+    --accent: #3525cd;
+    --accent-container: #4f46e5;
+    --surface: #fcf9f8;
+    --on-surface: #1c1b1b;
+  }
+
+  body {
+    @apply bg-surface text-on-surface font-body antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary-fixed-dim text-on-primary-fixed;
+  }
+}
+
+@layer components {
+  .silk-gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-container) 100%);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .glass-panel-dark {
+    background: rgba(28, 27, 27, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Smooth page transitions */
+  .page-enter {
+    animation: pageIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes pageIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .animate-slide-right {
+    animation: slideRight 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Map canvas cursor */
+  .map-canvas {
+    cursor: grab;
+  }
+  .map-canvas:active {
+    cursor: grabbing;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c7c4d8;
+    border-radius: 99px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #777587;
+  }
+}
