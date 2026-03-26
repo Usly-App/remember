@@ -1,14 +1,13 @@
 import Link from 'next/link';
+import { NoddicLogo } from '@/components/logo';
 
 export default function HomePage() {
   return (
     <div className="bg-surface text-on-surface font-body selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
       {/* ── Header ────────────────────────────────────────── */}
       <header className="sticky top-0 w-full z-50 bg-[#fcf9f8]/80 backdrop-blur-xl shadow-[0_24px_24px_rgba(28,27,27,0.04)]">
-        <nav className="flex justify-between items-center px-6 md:px-10 py-5 max-w-[1440px] mx-auto">
-          <div className="text-2xl font-bold text-on-surface font-headline tracking-tight">
-            Remember
-          </div>
+        <nav className="flex justify-between items-center px-6 md:px-10 py-4 max-w-[1440px] mx-auto">
+          <NoddicLogo />
           <div className="flex items-center gap-4">
             <Link
               href="/login"
@@ -28,9 +27,9 @@ export default function HomePage() {
 
       <main>
         {/* ── Hero ──────────────────────────────────────────── */}
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden px-6 md:px-10">
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden px-6 md:px-10 py-20 md:py-0">
           <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-6 z-10">
+            <div className="lg:col-span-6 z-10 text-center lg:text-left">
               <h1 className="font-headline font-extrabold text-6xl md:text-7xl lg:text-8xl tracking-tighter leading-[0.9] mb-8 text-on-surface">
                 A better way to{' '}
                 <br className="hidden md:block" />
@@ -38,12 +37,12 @@ export default function HomePage() {
                 <br className="hidden md:block" />
                 who and where.
               </h1>
-              <p className="text-on-surface-variant text-lg md:text-xl max-w-lg mb-12 leading-relaxed">
+              <p className="text-on-surface-variant text-lg md:text-xl max-w-lg mb-12 leading-relaxed mx-auto lg:mx-0">
                 Transform your social landscape into a living, visual map.
-                Remember maps your connections so you never forget a face, a
+                Noddic maps your connections so you never forget a face, a
                 place, or the story that links them.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Link
                   href="/signup"
                   className="silk-gradient text-white px-10 py-4 rounded-full font-headline font-bold text-lg shadow-xl hover:shadow-2xl transition-all active:scale-95 inline-block"
@@ -67,34 +66,50 @@ export default function HomePage() {
                 </div>
 
                 {/* Floating node cards */}
-                <div className="absolute top-[12%] left-[5%] glass-panel p-4 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
-                  style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+                <div
+                  className="absolute top-[12%] left-[5%] glass-panel p-4 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
+                  style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+                >
                   <div className="w-10 h-10 rounded-full bg-[#4ECDC4]/20 flex items-center justify-center text-[#4ECDC4] font-bold text-sm">
                     JR
                   </div>
                   <div>
-                    <p className="font-headline font-bold text-sm text-on-surface">Julian Rossi</p>
-                    <p className="font-body text-xs text-on-surface-variant">Met at Design Week</p>
+                    <p className="font-headline font-bold text-sm text-on-surface">
+                      Julian Rossi
+                    </p>
+                    <p className="font-body text-xs text-on-surface-variant">
+                      Met at Design Week
+                    </p>
                   </div>
                 </div>
 
-                <div className="absolute top-[42%] right-[2%] glass-panel p-4 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
-                  style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+                <div
+                  className="absolute top-[42%] right-[2%] glass-panel p-4 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
+                  style={{ animationDelay: '0.5s', animationFillMode: 'both' }}
+                >
                   <div className="w-10 h-10 rounded-full bg-[#FF6B6B]/20 flex items-center justify-center text-[#FF6B6B] font-bold text-xs">
                     ◆
                   </div>
                   <div>
-                    <p className="font-headline font-bold text-sm text-on-surface">The Glass Studio</p>
-                    <p className="font-body text-xs text-on-surface-variant">Fremantle, WA</p>
+                    <p className="font-headline font-bold text-sm text-on-surface">
+                      The Glass Studio
+                    </p>
+                    <p className="font-body text-xs text-on-surface-variant">
+                      Fremantle, WA
+                    </p>
                   </div>
                 </div>
 
-                <div className="absolute bottom-[18%] left-[20%] glass-panel p-3 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
-                  style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
+                <div
+                  className="absolute bottom-[18%] left-[20%] glass-panel p-3 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
+                  style={{ animationDelay: '0.8s', animationFillMode: 'both' }}
+                >
                   <div className="w-8 h-8 rounded-full silk-gradient flex items-center justify-center text-white text-xs font-bold">
                     ■
                   </div>
-                  <p className="font-headline font-semibold text-xs text-on-surface">Yoga Tuesday</p>
+                  <p className="font-headline font-semibold text-xs text-on-surface">
+                    Yoga Tuesday
+                  </p>
                 </div>
               </div>
             </div>
@@ -106,9 +121,12 @@ export default function HomePage() {
         </section>
 
         {/* ── How It Works ─────────────────────────────────── */}
-        <section id="how-it-works" className="py-24 md:py-32 px-6 md:px-10 bg-surface-container-low">
+        <section
+          id="how-it-works"
+          className="py-24 md:py-32 px-6 md:px-10 bg-surface-container-low"
+        >
           <div className="max-w-[1440px] mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 md:mb-20 gap-8">
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 md:mb-20 gap-8 text-center md:text-left">
               <div className="max-w-2xl">
                 <span className="text-primary font-headline font-bold tracking-[0.2em] uppercase text-sm mb-4 block">
                   How it Works
@@ -118,8 +136,9 @@ export default function HomePage() {
                   <br /> follow the path.
                 </h2>
               </div>
-              <p className="text-on-secondary-container text-lg max-w-sm">
-                Stop thinking in lists. Start seeing connections through a spatial, visual lens.
+              <p className="text-on-secondary-container text-lg max-w-sm text-center md:text-left">
+                Stop thinking in lists. Start seeing connections through a
+                spatial, visual lens.
               </p>
             </div>
 
@@ -131,9 +150,9 @@ export default function HomePage() {
                     You Are the Center
                   </h3>
                   <p className="text-on-surface-variant max-w-md">
-                    Your map starts with you. Add the contexts of your life — gym, work,
-                    neighbourhood — then branch out to the people and places within each.
-                    Follow the path to remember.
+                    Your map starts with you. Add the contexts of your life —
+                    gym, work, neighbourhood — then branch out to the people and
+                    places within each. Follow the path to remember.
                   </p>
                 </div>
                 <div className="mt-8 flex gap-3 flex-wrap">
@@ -159,8 +178,8 @@ export default function HomePage() {
                     Memory Hints
                   </h3>
                   <p className="opacity-80 text-sm">
-                    Add hints to each node — &quot;tall, red hair, met through Dave&quot; — so
-                    the path triggers your memory.
+                    Add hints to each node — &quot;tall, red hair, met through
+                    Dave&quot; — so the path triggers your memory.
                   </p>
                 </div>
                 <div className="flex-1 bg-surface-container-highest rounded-3xl p-8 flex flex-col justify-between min-h-[160px]">
@@ -168,8 +187,8 @@ export default function HomePage() {
                     Your Terminology
                   </h3>
                   <p className="text-on-surface-variant text-sm">
-                    Rename &quot;nodes&quot; to whatever fits your brain — connections, dots,
-                    pins, threads. Make it yours.
+                    Rename &quot;nodes&quot; to whatever fits your brain —
+                    connections, dots, pins, threads. Make it yours.
                   </p>
                 </div>
               </div>
@@ -191,7 +210,7 @@ export default function HomePage() {
               Get Started Free
             </Link>
             <p className="mt-10 text-on-surface-variant text-sm font-label uppercase tracking-widest">
-              Free forever for personal use
+              Free for personal use
             </p>
           </div>
         </section>
@@ -200,13 +219,17 @@ export default function HomePage() {
       {/* ── Footer ───────────────────────────────────────── */}
       <footer className="bg-surface border-t border-surface-container">
         <div className="flex flex-col md:flex-row justify-between items-center max-w-[1440px] mx-auto gap-6 w-full py-10 px-6 md:px-10">
-          <div className="font-headline font-bold text-lg text-on-surface">Remember</div>
+          <NoddicLogo size="small" />
           <div className="flex flex-wrap justify-center gap-8">
-            <span className="text-xs uppercase tracking-widest text-on-surface/40">Privacy Policy</span>
-            <span className="text-xs uppercase tracking-widest text-on-surface/40">Terms of Service</span>
+            <Link href="/privacy" className="text-xs uppercase tracking-widest text-on-surface/40 hover:text-primary transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs uppercase tracking-widest text-on-surface/40 hover:text-primary transition-colors">
+              Terms of Service
+            </Link>
           </div>
           <div className="text-xs uppercase tracking-widest text-on-surface/40">
-            © 2026 Remember
+            © 2026 Noddic
           </div>
         </div>
       </footer>
