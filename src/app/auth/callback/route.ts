@@ -7,13 +7,12 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/map';
 
   if (code) {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  // Redirect to login on error
   return NextResponse.redirect(`${origin}/login`);
 }
