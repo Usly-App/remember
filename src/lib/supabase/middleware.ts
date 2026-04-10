@@ -29,7 +29,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /map and /settings routes
   if (
     !user &&
     (request.nextUrl.pathname.startsWith('/map') ||
@@ -40,7 +39,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
   if (
     user &&
     (request.nextUrl.pathname === '/login' ||
