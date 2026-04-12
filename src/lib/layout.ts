@@ -37,12 +37,18 @@ export function computeRadialLayout(
     angleStart: number,
     angleEnd: number
   ) => {
-    const radius = depth * spacing;
-    const angleMid = (angleStart + angleEnd) / 2;
-    positions[id] = {
-      x: Math.cos(angleMid) * radius,
-      y: Math.sin(angleMid) * radius,
-    };
+    // Use saved position if it exists
+    const node = nodes.find((n) => n.id === id);
+    if (node?.position_x != null && node?.position_y != null) {
+      positions[id] = { x: node.position_x, y: node.position_y };
+    } else {
+      const radius = depth * spacing;
+      const angleMid = (angleStart + angleEnd) / 2;
+      positions[id] = {
+        x: Math.cos(angleMid) * radius,
+        y: Math.sin(angleMid) * radius,
+      };
+    }
 
     const children = childrenMap[id] || [];
     if (children.length === 0) return;

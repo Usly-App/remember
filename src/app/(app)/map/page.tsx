@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser, useNodes, useSettings } from '@/lib/hooks';
 import { computeRadialLayout } from '@/lib/layout';
 import { getNodeTypes, type MapNode, type NodeType, type NodeTypeConfig } from '@/lib/types';
-import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate } from 'lucide-react';
+import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock } from 'lucide-react';
 
 // ─── Onboarding (create root node) ─────────────────────────────────
 function Onboarding({
@@ -231,6 +231,7 @@ function NodePanel({
   onUpdate,
   onDelete,
   onAddChild,
+  onResetPosition,
   onClose,
 }: {
   node: MapNode;
@@ -239,6 +240,7 @@ function NodePanel({
   onUpdate: (id: string, data: Partial<MapNode>) => void;
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
+  onResetPosition: (id: string) => void;
   onClose: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -246,6 +248,7 @@ function NodePanel({
   const typeInfo = nodeTypes.find((t) => t.key === node.type) || nodeTypes[0];
   const children = nodes.filter((n) => n.parent_id === node.id);
   const parent = nodes.find((n) => n.id === node.parent_id);
+  const hasCustomPosition = node.position_x != null && node.position_y != null;
 
   useEffect(() => {
     setForm({ ...node });
@@ -335,7 +338,6 @@ function NodePanel({
             )}
           </>
         ) : (
-          /* Edit form */
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -349,6 +351,27 @@ function NodePanel({
             </div>
             {node.type !== 'user' && (
               <>
+                <div>
+                  <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Type
+                  </label>
+                  <div className="flex gap-2">
+                    {nodeTypes.filter((t) => t.key !== 'user').map((t) => (
+                      <button
+                        key={t.key}
+                        onClick={() => setForm({ ...form, type: t.key })}
+                        className="flex-1 py-2.5 px-3 rounded-xl text-xs font-headline font-semibold border-2 transition-all"
+                        style={{
+                          borderColor: form.type === t.key ? t.color : 'transparent',
+                          background: form.type === t.key ? t.color + '15' : '#f0edec',
+                          color: form.type === t.key ? t.color : '#464555',
+                        }}
+                      >
+                        {t.icon} {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div>
                   <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
                     Hint
@@ -420,6 +443,15 @@ function NodePanel({
               >
                 <Pencil size={14} /> Edit
               </button>
+              {hasCustomPosition && (
+                <button
+                  onClick={() => onResetPosition(node.id)}
+                  className="py-2.5 px-3 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition flex items-center justify-center gap-1"
+                  title="Reset to auto position"
+                >
+                  <Locate size={14} />
+                </button>
+              )}
               {node.type !== 'user' && (
                 <button
                   onClick={() => {
@@ -461,22 +493,28 @@ function MapCanvas({
   positions,
   selectedId,
   nodeTypes,
+  dragEnabled,
   onSelectNode,
+  onDragNode,
 }: {
   nodes: MapNode[];
   positions: Record<string, { x: number; y: number }>;
   selectedId: string | null;
   nodeTypes: NodeTypeConfig[];
+  dragEnabled: boolean;
   onSelectNode: (id: string | null) => void;
+  onDragNode: (id: string, x: number, y: number) => void;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [dragging, setDragging] = useState(false);
+  const [draggingCanvas, setDraggingCanvas] = useState(false);
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
+  const nodeStartPos = useRef({ x: 0, y: 0 });
+  const didDrag = useRef(false);
 
-  // Center on mount
   useEffect(() => {
     if (svgRef.current) {
       const rect = svgRef.current.getBoundingClientRect();
@@ -498,24 +536,86 @@ function MapCanvas({
     }
   }, [handleWheel]);
 
+  const getEventPos = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    if ('touches' in e && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if ('changedTouches' in e && e.changedTouches.length > 0) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    if ('clientX' in e) return { x: e.clientX, y: e.clientY };
+    return { x: 0, y: 0 };
+  };
+
+  const screenToWorld = (screenX: number, screenY: number) => {
+    if (!svgRef.current) return { x: 0, y: 0 };
+    const rect = svgRef.current.getBoundingClientRect();
+    return {
+      x: (screenX - rect.left - pan.x) / zoom,
+      y: (screenY - rect.top - pan.y) / zoom,
+    };
+  };
+
   const onPointerDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if ((e.target as HTMLElement).closest('[data-node]')) return;
-    setDragging(true);
-    const pos = 'touches' in e ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+    const target = e.target as HTMLElement;
+    const nodeEl = target.closest('[data-node-id]');
+
+    if (nodeEl && dragEnabled) {
+      const nodeId = nodeEl.getAttribute('data-node-id')!;
+      const pos = getEventPos(e);
+      const nodePos = positions[nodeId];
+      if (nodePos) {
+        setDraggingNodeId(nodeId);
+        dragStart.current = pos;
+        nodeStartPos.current = { x: nodePos.x, y: nodePos.y };
+        didDrag.current = false;
+        e.preventDefault();
+        return;
+      }
+    }
+
+    setDraggingCanvas(true);
+    const pos = getEventPos(e);
     dragStart.current = pos;
     panStart.current = pan;
   };
 
   const onPointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragging) return;
-    const pos = 'touches' in e ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-    setPan({
-      x: panStart.current.x + (pos.x - dragStart.current.x),
-      y: panStart.current.y + (pos.y - dragStart.current.y),
-    });
+    const pos = getEventPos(e);
+
+    if (draggingNodeId) {
+      const dx = (pos.x - dragStart.current.x) / zoom;
+      const dy = (pos.y - dragStart.current.y) / zoom;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        didDrag.current = true;
+      }
+      const newX = nodeStartPos.current.x + dx;
+      const newY = nodeStartPos.current.y + dy;
+      onDragNode(draggingNodeId, newX, newY);
+      return;
+    }
+
+    if (draggingCanvas) {
+      setPan({
+        x: panStart.current.x + (pos.x - dragStart.current.x),
+        y: panStart.current.y + (pos.y - dragStart.current.y),
+      });
+    }
   };
 
-  const onPointerUp = () => setDragging(false);
+  const onPointerUp = (e: React.MouseEvent | React.TouchEvent) => {
+    if (draggingNodeId) {
+      if (!didDrag.current) {
+        onSelectNode(draggingNodeId === selectedId ? null : draggingNodeId);
+      }
+      setDraggingNodeId(null);
+      return;
+    }
+
+    setDraggingCanvas(false);
+  };
+
+  const handleNodeClick = (e: React.MouseEvent, nodeId: string) => {
+    if (dragEnabled) return;
+    e.stopPropagation();
+    onSelectNode(nodeId === selectedId ? null : nodeId);
+  };
 
   const recenter = () => {
     if (svgRef.current) {
@@ -525,12 +625,18 @@ function MapCanvas({
     }
   };
 
+  const getCursor = () => {
+    if (draggingNodeId) return 'grabbing';
+    if (draggingCanvas) return 'grabbing';
+    return 'grab';
+  };
+
   return (
     <div className="relative w-full h-full">
       <svg
         ref={svgRef}
-        className="w-full h-full map-canvas"
-        style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+        className="w-full h-full"
+        style={{ cursor: getCursor() }}
         onMouseDown={onPointerDown}
         onMouseMove={onPointerMove}
         onMouseUp={onPointerUp}
@@ -539,7 +645,6 @@ function MapCanvas({
         onTouchMove={onPointerMove}
         onTouchEnd={onPointerUp}
       >
-        {/* Subtle grid background */}
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"
             patternTransform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
@@ -577,55 +682,77 @@ function MapCanvas({
             if (!pos) return null;
             const typeInfo = nodeTypes.find((t) => t.key === n.type) || nodeTypes[0];
             const isSelected = selectedId === n.id;
+            const isDragging = draggingNodeId === n.id;
             const isRoot = n.type === 'user';
             const r = isRoot ? 38 : 28;
 
             return (
               <g
                 key={n.id}
-                data-node="true"
-                style={{ cursor: 'pointer' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectNode(n.id === selectedId ? null : n.id);
-                }}
+                data-node-id={n.id}
+                style={{ cursor: dragEnabled ? (isDragging ? 'grabbing' : 'grab') : 'pointer' }}
+                onClick={(e) => handleNodeClick(e, n.id)}
               >
-                {/* Selection glow */}
                 {isSelected && (
                   <circle cx={pos.x} cy={pos.y} r={r + 10} fill={typeInfo.color} opacity={0.1} />
                 )}
-                {/* Node circle */}
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill="#fcf9f8"
-                  stroke={typeInfo.color}
-                  strokeWidth={isSelected ? 2.5 : 1.8}
-                />
-                {/* Inner symbol */}
-                {isRoot ? (
-                  <circle cx={pos.x} cy={pos.y} r={6} fill={typeInfo.color} opacity={0.6} />
-                ) : n.type === 'place' ? (
-                  <polygon
-                    points={`${pos.x},${pos.y - 5} ${pos.x + 5},${pos.y + 3} ${pos.x - 5},${pos.y + 3}`}
-                    fill={typeInfo.color}
-                    opacity={0.5}
-                  />
-                ) : n.type === 'context' ? (
-                  <rect
-                    x={pos.x - 5}
-                    y={pos.y - 5}
-                    width={10}
-                    height={10}
-                    rx={2}
-                    fill={typeInfo.color}
-                    opacity={0.5}
-                  />
-                ) : (
-                  <circle cx={pos.x} cy={pos.y} r={4} fill={typeInfo.color} opacity={0.5} />
+                {isDragging && (
+                  <circle cx={pos.x} cy={pos.y} r={r + 6} fill={typeInfo.color} opacity={0.08} stroke={typeInfo.color} strokeWidth={1} strokeDasharray="4 3" />
                 )}
-                {/* Label */}
+                {isRoot ? (
+                  <>
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={r}
+                      fill={typeInfo.color}
+                      stroke={isSelected ? 'white' : 'none'}
+                      strokeWidth={3}
+                    />
+                    <text
+                      x={pos.x}
+                      y={pos.y + 1}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fill="white"
+                      fontSize={24}
+                      fontWeight={800}
+                      fontFamily="Manrope, system-ui, sans-serif"
+                    >
+                      {n.name.charAt(0).toUpperCase()}
+                    </text>
+                  </>
+                ) : (
+                  <>
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={r}
+                      fill="#fcf9f8"
+                      stroke={typeInfo.color}
+                      strokeWidth={isSelected ? 2.5 : 1.8}
+                    />
+                    {n.type === 'place' ? (
+                      <polygon
+                        points={`${pos.x},${pos.y - 5} ${pos.x + 5},${pos.y + 3} ${pos.x - 5},${pos.y + 3}`}
+                        fill={typeInfo.color}
+                        opacity={0.5}
+                      />
+                    ) : n.type === 'context' ? (
+                      <rect
+                        x={pos.x - 5}
+                        y={pos.y - 5}
+                        width={10}
+                        height={10}
+                        rx={2}
+                        fill={typeInfo.color}
+                        opacity={0.5}
+                      />
+                    ) : (
+                      <circle cx={pos.x} cy={pos.y} r={4} fill={typeInfo.color} opacity={0.5} />
+                    )}
+                  </>
+                )}
                 <text
                   x={pos.x}
                   y={pos.y + r + 16}
@@ -637,7 +764,6 @@ function MapCanvas({
                 >
                   {n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name}
                 </text>
-                {/* Hint preview */}
                 {n.hint && !isRoot && (
                   <text
                     x={pos.x}
@@ -706,14 +832,44 @@ export default function MapPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addingFromId, setAddingFromId] = useState<string | null>(null);
+  const [dragEnabled, setDragEnabled] = useState(false);
+  const [localPositions, setLocalPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const saveTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const nodeTypes = getNodeTypes(settings);
-  const positions = computeRadialLayout(nodes);
+  const calculatedPositions = computeRadialLayout(nodes);
+
+  // Merge calculated positions with local drag overrides
+  const positions = { ...calculatedPositions, ...localPositions };
+
   const selectedNode = nodes.find((n) => n.id === selectedId);
   const addingFromNode = nodes.find((n) => n.id === addingFromId);
   const hasRootNode = nodes.some((n) => n.type === 'user');
 
-  // Loading state
+  // Clear local positions when nodes change (e.g. after save)
+  useEffect(() => {
+    setLocalPositions({});
+  }, [nodes]);
+
+  const handleDragNode = useCallback((id: string, x: number, y: number) => {
+    setLocalPositions((prev) => ({ ...prev, [id]: { x, y } }));
+
+    // Debounce save to database
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => {
+      updateNode(id, { position_x: x, position_y: y });
+    }, 500);
+  }, [updateNode]);
+
+  const handleResetPosition = useCallback((id: string) => {
+    updateNode(id, { position_x: null, position_y: null } as any);
+    setLocalPositions((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, [updateNode]);
+
   if (userLoading || nodesLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -727,7 +883,6 @@ export default function MapPage() {
     return null;
   }
 
-  // Onboarding — create root node
   if (!hasRootNode) {
     return (
       <Onboarding
@@ -756,10 +911,26 @@ export default function MapPage() {
         positions={positions}
         selectedId={selectedId}
         nodeTypes={nodeTypes}
+        dragEnabled={dragEnabled}
         onSelectNode={setSelectedId}
+        onDragNode={handleDragNode}
       />
 
-      {/* Node detail panel */}
+      {/* Drag mode toggle */}
+      <div className="absolute top-4 left-4 z-10">
+        <button
+          onClick={() => setDragEnabled(!dragEnabled)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm transition-all ${
+            dragEnabled
+              ? 'bg-primary text-white border-primary shadow-md'
+              : 'bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary'
+          }`}
+        >
+          {dragEnabled ? <Unlock size={15} /> : <Lock size={15} />}
+          {dragEnabled ? 'Moving Nodes' : 'Move Nodes'}
+        </button>
+      </div>
+
       {selectedNode && !addingFromId && (
         <NodePanel
           node={selectedNode}
@@ -771,11 +942,11 @@ export default function MapPage() {
             setSelectedId(null);
           }}
           onAddChild={(parentId) => setAddingFromId(parentId)}
+          onResetPosition={handleResetPosition}
           onClose={() => setSelectedId(null)}
         />
       )}
 
-      {/* Add node modal */}
       {addingFromNode && (
         <AddNodeModal
           parentNode={addingFromNode}
