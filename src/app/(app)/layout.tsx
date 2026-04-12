@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Settings, Map, LogOut } from 'lucide-react';
+import { NoddicLogo } from '@/components/logo';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -20,12 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Top bar */}
       <header className="flex-shrink-0 flex justify-between items-center px-5 md:px-8 py-3.5 bg-surface/80 backdrop-blur-xl border-b border-surface-container z-50">
         <div className="flex items-center gap-8">
-          <Link
-            href="/map"
-            className="font-headline font-bold text-xl text-on-surface tracking-tight"
-          >
-            Remember
-          </Link>
+          <NoddicLogo size="small" href="/map" />
           <nav className="hidden md:flex items-center gap-1">
             <Link
               href="/map"

@@ -30,7 +30,7 @@ export default function HomePage() {
         <section className="relative min-h-[90vh] flex items-center overflow-hidden px-6 md:px-10 py-20 md:py-0">
           <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-6 z-10 text-center lg:text-left">
-              <h1 className="font-headline font-extrabold text-6xl md:text-7xl lg:text-8xl tracking-tighter leading-[0.9] mb-8 text-on-surface">
+              <h1 className="font-headline font-extrabold text-6xl md:text-7xl lg:text-7xl tracking-tighter leading-[0.9] mb-8 text-on-surface">
                 A better way to{' '}
                 <br className="hidden md:block" />
                 <span className="text-primary italic">remember</span>{' '}
@@ -210,7 +210,7 @@ export default function HomePage() {
               Get Started Free
             </Link>
             <p className="mt-10 text-on-surface-variant text-sm font-label uppercase tracking-widest">
-              Free for personal use
+              Free forever for personal use
             </p>
           </div>
         </section>
