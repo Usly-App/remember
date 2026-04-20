@@ -30,18 +30,17 @@ export default function HomePage() {
         <section className="relative min-h-[90vh] flex items-center overflow-hidden px-6 md:px-10 py-20 md:py-0">
           <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-6 z-10 text-center lg:text-left">
-              <h1 className="font-headline font-extrabold text-6xl md:text-7xl lg:text-8xl tracking-tighter leading-[0.9] mb-8 text-on-surface">
-                Remember{' '}
+              <h1 className="font-headline font-extrabold text-6xl md:text-7xl lg:text-7xl tracking-tighter leading-[0.9] mb-8 text-on-surface">
+                A better way to{' '}
                 <br className="hidden md:block" />
-                <span className="text-primary italic">who, where,</span>{' '}
+                <span className="text-primary italic">remember</span>{' '}
                 <br className="hidden md:block" />
-                <span className="text-primary italic">what</span> &amp;{' '}
-                <span className="text-primary italic">why.</span>
+                who and where.
               </h1>
               <p className="text-on-surface-variant text-lg md:text-xl max-w-lg mb-12 leading-relaxed mx-auto lg:mx-0">
-                Noddic is a visual mind map for everything you want to remember.
-                People, places, ideas, projects — map them out, connect them
-                together, and never lose track again.
+                Transform your social landscape into a living, visual map.
+                Noddic maps your connections so you never forget a face, a
+                place, or the story that links them.
               </p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Link
@@ -59,13 +58,14 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Hero visual */}
+            {/* Hero visual — abstract mind map illustration */}
             <div className="lg:col-span-6 relative">
               <div className="relative w-full aspect-square max-w-2xl mx-auto">
                 <div className="absolute inset-0 rounded-[3rem] overflow-hidden bg-surface-container-low shadow-2xl flex items-center justify-center">
                   <HeroMapSVG />
                 </div>
 
+                {/* Floating node cards */}
                 <div
                   className="absolute top-[12%] left-[5%] glass-panel p-4 rounded-xl shadow-2xl flex items-center gap-3 z-20 border border-white/20 animate-slide-up"
                   style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
@@ -92,10 +92,10 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="font-headline font-bold text-sm text-on-surface">
-                      Tokyo Trip 2026
+                      The Glass Studio
                     </p>
                     <p className="font-body text-xs text-on-surface-variant">
-                      Hotels, food, sightseeing
+                      Fremantle, WA
                     </p>
                   </div>
                 </div>
@@ -108,7 +108,7 @@ export default function HomePage() {
                     ■
                   </div>
                   <p className="font-headline font-semibold text-xs text-on-surface">
-                    Q2 Product Launch
+                    Yoga Tuesday
                   </p>
                 </div>
               </div>
@@ -143,15 +143,16 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              {/* Large card */}
               <div className="md:col-span-8 bg-surface-container-lowest rounded-3xl p-8 md:p-10 flex flex-col justify-between shadow-sm min-h-[360px]">
                 <div>
                   <h3 className="font-headline font-bold text-2xl md:text-3xl mb-4">
                     You Are the Center
                   </h3>
                   <p className="text-on-surface-variant max-w-md">
-                    Every map starts with you. Branch out to contexts, people, places,
-                    ideas — whatever you need. Add hints and descriptions so when you
-                    follow the path, your memory fills in the rest.
+                    Your map starts with you. Add the contexts of your life —
+                    gym, work, neighbourhood — then branch out to the people and
+                    places within each. Follow the path to remember.
                   </p>
                 </div>
                 <div className="mt-8 flex gap-3 flex-wrap">
@@ -169,6 +170,7 @@ export default function HomePage() {
                 </div>
               </div>
 
+              {/* Side cards */}
               <div className="md:col-span-4 flex flex-col gap-6">
                 <div className="flex-1 silk-gradient text-white rounded-3xl p-8 flex flex-col justify-end min-h-[160px]">
                   <div className="text-3xl mb-4">🔗</div>
@@ -190,113 +192,6 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Use Cases ────────────────────────────────────── */}
-        <section
-          id="use-cases"
-          className="py-24 md:py-32 px-6 md:px-10"
-        >
-          <div className="max-w-[1440px] mx-auto">
-            <div className="text-center mb-16 md:mb-20">
-              <span className="text-primary font-headline font-bold tracking-[0.2em] uppercase text-sm mb-4 block">
-                One tool, many maps
-              </span>
-              <h2 className="font-headline font-extrabold text-4xl md:text-5xl text-on-surface tracking-tight leading-tight">
-                Map anything that matters.
-              </h2>
-              <p className="text-on-surface-variant text-lg max-w-xl mx-auto mt-4">
-                Create as many maps as you need. Each one starts with you at the center
-                and branches out however your brain works.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  emoji: '👥',
-                  title: 'People & Connections',
-                  description:
-                    'Remember who you met, where you met them, and how they connect. Add hints like "tall, red hair, friend of Dave" so the path triggers your memory.',
-                  path: 'You → Gym → Coach Mike → His wife Sarah',
-                  color: '#4ECDC4',
-                },
-                {
-                  emoji: '✈️',
-                  title: 'Travel Planning',
-                  description:
-                    'Map out trips with places, restaurants, hotels, and activities branching from each destination. Add addresses and notes to every stop.',
-                  path: 'You → Japan 2026 → Tokyo → Shibuya Ramen Spot',
-                  color: '#FF6B6B',
-                },
-                {
-                  emoji: '📚',
-                  title: 'Study & Research',
-                  description:
-                    'Break down topics into concepts, sources, and questions. Follow the branches to see how ideas connect across subjects.',
-                  path: 'You → Biology → Genetics → CRISPR → Key Papers',
-                  color: '#4f46e5',
-                },
-                {
-                  emoji: '🏗️',
-                  title: 'Project Management',
-                  description:
-                    'Map phases, tasks, people, and dependencies. See your whole project as a connected visual instead of a flat list.',
-                  path: 'You → App Launch → Design → Wireframes → Review',
-                  color: '#E8A838',
-                },
-                {
-                  emoji: '🏠',
-                  title: 'Neighbourhood & Community',
-                  description:
-                    'Map your neighbours, local businesses, and community contacts. Remember the name of the barista, the dog walker, the plumber.',
-                  path: 'You → My Street → No. 42 → Dave & Lisa → Their dog Rex',
-                  color: '#A78BFA',
-                },
-                {
-                  emoji: '🍳',
-                  title: 'Recipes & Collections',
-                  description:
-                    'Organise recipes by cuisine, occasion, or ingredient. Branch out to variations, tips, and where you discovered them.',
-                  path: "You → Italian → Pasta → Carbonara → Nonna's version",
-                  color: '#059669',
-                },
-              ].map((useCase) => (
-                <div
-                  key={useCase.title}
-                  className="bg-surface-container-lowest rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[280px] hover:shadow-md transition-shadow"
-                >
-                  <div>
-                    <div className="text-3xl mb-4">{useCase.emoji}</div>
-                    <h3 className="font-headline font-bold text-xl text-on-surface mb-3">
-                      {useCase.title}
-                    </h3>
-                    <p className="text-on-surface-variant text-sm leading-relaxed">
-                      {useCase.description}
-                    </p>
-                  </div>
-                  <div className="mt-6 flex items-center gap-1.5 flex-wrap">
-                    {useCase.path.split(' → ').map((step, i, arr) => (
-                      <span key={i} className="flex items-center gap-1.5">
-                        <span
-                          className="text-xs font-headline font-semibold px-2.5 py-1 rounded-full"
-                          style={{
-                            background: useCase.color + '15',
-                            color: useCase.color,
-                          }}
-                        >
-                          {step}
-                        </span>
-                        {i < arr.length - 1 && (
-                          <span style={{ color: useCase.color }} className="text-xs">→</span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -345,6 +240,7 @@ export default function HomePage() {
 function HeroMapSVG() {
   return (
     <svg viewBox="0 0 500 500" className="w-[85%] h-[85%] opacity-60">
+      {/* Connection lines */}
       <line x1="250" y1="250" x2="120" y2="130" stroke="#3525cd" strokeWidth="1.5" strokeDasharray="5 5" opacity="0.35" />
       <line x1="250" y1="250" x2="390" y2="200" stroke="#3525cd" strokeWidth="1.5" strokeDasharray="5 5" opacity="0.35" />
       <line x1="250" y1="250" x2="170" y2="380" stroke="#3525cd" strokeWidth="1.5" strokeDasharray="5 5" opacity="0.35" />
@@ -354,9 +250,11 @@ function HeroMapSVG() {
       <line x1="390" y1="200" x2="440" y2="130" stroke="#FF6B6B" strokeWidth="1" strokeDasharray="3 4" opacity="0.3" />
       <line x1="370" y1="370" x2="430" y2="420" stroke="#4ECDC4" strokeWidth="1" strokeDasharray="3 4" opacity="0.3" />
 
+      {/* Center node */}
       <circle cx="250" cy="250" r="28" fill="#fcf9f8" stroke="#3525cd" strokeWidth="2.5" />
       <circle cx="250" cy="250" r="6" fill="#3525cd" opacity="0.7" />
 
+      {/* Context nodes */}
       <circle cx="120" cy="130" r="20" fill="#fcf9f8" stroke="#4f46e5" strokeWidth="2" />
       <rect x="113" y="123" width="14" height="14" rx="3" fill="#4f46e5" opacity="0.5" />
 
@@ -369,6 +267,7 @@ function HeroMapSVG() {
       <circle cx="370" cy="370" r="20" fill="#fcf9f8" stroke="#4ECDC4" strokeWidth="2" />
       <circle cx="370" cy="370" r="5" fill="#4ECDC4" opacity="0.5" />
 
+      {/* Leaf nodes */}
       <circle cx="60" cy="80" r="12" fill="#fcf9f8" stroke="#4ECDC4" strokeWidth="1.5" />
       <circle cx="80" cy="200" r="12" fill="#fcf9f8" stroke="#4ECDC4" strokeWidth="1.5" />
       <circle cx="440" cy="130" r="12" fill="#fcf9f8" stroke="#FF6B6B" strokeWidth="1.5" />
