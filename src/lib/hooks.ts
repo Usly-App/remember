@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { MapNode, UserSettings } from '@/lib/types';
+import type { MapNode, UserSettings, MapRecord } from '@/lib/types';
 import type { User } from '@supabase/supabase-js';
 
 // ─── Auth Hook ────────────────────────────────────────────────────
@@ -67,22 +67,95 @@ export function useSettings(userId: string | undefined) {
   return { settings, loading, updateSettings, refetch: fetchSettings };
 }
 
-// ─── Nodes Hook ───────────────────────────────────────────────────
-export function useNodes(userId: string | undefined) {
+// ─── Maps Hook ────────────────────────────────────────────────────
+export function useMaps(userId: string | undefined) {
+  const [maps, setMaps] = useState<MapRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMaps = useCallback(async () => {
+    if (!userId) return;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('maps')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+    setMaps(data || []);
+    setLoading(false);
+  }, [userId]);
+
+  useEffect(() => {
+    fetchMaps();
+  }, [fetchMaps]);
+
+  const createMap = async (map: { name: string; emoji?: string; description?: string }) => {
+    if (!userId) return null;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('maps')
+      .insert({
+        user_id: userId,
+        name: map.name,
+        emoji: map.emoji || '🗺️',
+        description: map.description || null,
+      })
+      .select()
+      .single();
+    if (!error && data) {
+      setMaps((prev) => [data, ...prev]);
+    }
+    return { data, error };
+  };
+
+  const updateMap = async (id: string, updates: Partial<MapRecord>) => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('maps')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (!error && data) {
+      setMaps((prev) => prev.map((m) => (m.id === id ? data : m)));
+    }
+    return { data, error };
+  };
+
+  const deleteMap = async (id: string) => {
+    const supabase = createClient();
+    // Nodes are cascade-deleted by FK
+    const { error } = await supabase.from('maps').delete().eq('id', id);
+    if (!error) {
+      setMaps((prev) => prev.filter((m) => m.id !== id));
+    }
+    return { error };
+  };
+
+  return { maps, loading, createMap, updateMap, deleteMap, refetch: fetchMaps };
+}
+
+// ─── Nodes Hook (scoped to a map) ────────────────────────────────
+export function useNodes(userId: string | undefined, mapId?: string) {
   const [nodes, setNodes] = useState<MapNode[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNodes = useCallback(async () => {
     if (!userId) return;
     const supabase = createClient();
-    const { data } = await supabase
+    let query = supabase
       .from('map_nodes')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
+
+    if (mapId) {
+      query = query.eq('map_id', mapId);
+    }
+
+    const { data } = await query;
     setNodes(data || []);
     setLoading(false);
-  }, [userId]);
+  }, [userId, mapId]);
 
   useEffect(() => {
     fetchNodes();
@@ -95,7 +168,7 @@ export function useNodes(userId: string | undefined) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('map_nodes')
-      .insert({ ...node, user_id: userId })
+      .insert({ ...node, user_id: userId, map_id: node.map_id || mapId || null })
       .select()
       .single();
     if (!error && data) {
@@ -119,7 +192,6 @@ export function useNodes(userId: string | undefined) {
   };
 
   const deleteNode = async (id: string) => {
-    // Collect all descendant IDs to remove from local state
     const toDelete = new Set<string>();
     const collect = (nid: string) => {
       toDelete.add(nid);
@@ -128,7 +200,6 @@ export function useNodes(userId: string | undefined) {
     collect(id);
 
     const supabase = createClient();
-    // Cascade delete is handled by FK, just delete the root
     const { error } = await supabase.from('map_nodes').delete().eq('id', id);
     if (!error) {
       setNodes((prev) => prev.filter((n) => !toDelete.has(n.id)));
@@ -139,10 +210,11 @@ export function useNodes(userId: string | undefined) {
   const deleteAllNodes = async () => {
     if (!userId) return;
     const supabase = createClient();
-    const { error } = await supabase
-      .from('map_nodes')
-      .delete()
-      .eq('user_id', userId);
+    let query = supabase.from('map_nodes').delete().eq('user_id', userId);
+    if (mapId) {
+      query = query.eq('map_id', mapId);
+    }
+    const { error } = await query;
     if (!error) setNodes([]);
     return { error };
   };

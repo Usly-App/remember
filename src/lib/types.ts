@@ -1,9 +1,20 @@
 export type NodeType = string;
 
+export interface MapRecord {
+  id: string;
+  user_id: string;
+  name: string;
+  emoji: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MapNode {
   id: string;
   user_id: string;
   parent_id: string | null;
+  map_id: string | null;
   name: string;
   type: string;
   hint: string | null;
@@ -25,6 +36,7 @@ export interface MapNode {
   inner_color: string | null;
   inner_size: number | null;
   inner_solid: boolean | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
