@@ -11,15 +11,29 @@ export function computeRadialLayout(
 ): Record<string, Position> {
   if (!nodes.length) return {};
 
-  const root = nodes.find((n) => n.type === 'user');
+  const root = nodes.find((n) => !n.parent_id);
   if (!root) return {};
 
   // Build children map
   const childrenMap: Record<string, string[]> = {};
   nodes.forEach((n) => {
-    if (n.parent_id) {
+    if (n.parent_id && n.parent_id !== root.id) {
       if (!childrenMap[n.parent_id]) childrenMap[n.parent_id] = [];
       childrenMap[n.parent_id].push(n.id);
+    } else if (n.id !== root.id) {
+      // Orphan nodes (no parent_id or undefined) — attach to root
+      if (!childrenMap[root.id]) childrenMap[root.id] = [];
+      childrenMap[root.id].push(n.id);
+    }
+  });
+
+  // Also add nodes that explicitly have root as parent
+  nodes.forEach((n) => {
+    if (n.parent_id === root.id) {
+      if (!childrenMap[root.id]) childrenMap[root.id] = [];
+      if (!childrenMap[root.id].includes(n.id)) {
+        childrenMap[root.id].push(n.id);
+      }
     }
   });
 

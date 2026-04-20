@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useMaps, useSettings } from '@/lib/hooks';
 import type { MapRecord } from '@/lib/types';
@@ -179,7 +179,7 @@ export default function MyMapsPage() {
   const [nodeCounts, setNodeCounts] = useState<Record<string, number>>({});
 
   // Fetch node counts
-  useState(() => {
+  useEffect(() => {
     if (!user?.id) return;
     const supabase = (async () => {
       const { createClient } = await import('@/lib/supabase/client');
