@@ -51,6 +51,7 @@ export interface UserSettings {
   context_label: string;
   accent_color: string;
   secondary_color: string;
+  map_bg_color: string;
   created_at: string;
   updated_at: string;
 }
@@ -98,13 +99,13 @@ export const NODE_COLORS = [
 
 export const NODE_PRESETS: NodePreset[] = [
   { type: 'person', label: 'Person', outer_color: '#4ECDC4', inner_color: '#4ECDC4', outer_shape: 'circle', inner_shape: 'circle', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '●' },
-  { type: 'place', label: 'Place', outer_color: '#FF6B6B', inner_color: '#FF6B6B', outer_shape: 'circle', inner_shape: 'diamond', outer_size: 28, inner_size: 6, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '◆' },
-  { type: 'context', label: 'Context', outer_color: '#4f46e5', inner_color: '#4f46e5', outer_shape: 'circle', inner_shape: 'square', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '■' },
-  { type: 'thing', label: 'Thing', outer_color: '#E8A838', inner_color: '#E8A838', outer_shape: 'circle', inner_shape: 'triangle', outer_size: 28, inner_size: 6, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '▲' },
-  { type: 'idea', label: 'Idea', outer_color: '#A78BFA', inner_color: '#A78BFA', outer_shape: 'circle', inner_shape: 'star', outer_size: 28, inner_size: 7, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '★' },
+  { type: 'place', label: 'Place', outer_color: '#FF6B6B', inner_color: '#FF6B6B', outer_shape: 'diamond', inner_shape: 'diamond', outer_size: 28, inner_size: 6, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '◆' },
+  { type: 'context', label: 'Context', outer_color: '#4f46e5', inner_color: '#4f46e5', outer_shape: 'square', inner_shape: 'square', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '■' },
+  { type: 'thing', label: 'Thing', outer_color: '#E8A838', inner_color: '#E8A838', outer_shape: 'triangle', inner_shape: 'triangle', outer_size: 28, inner_size: 6, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '▲' },
+  { type: 'idea', label: 'Idea', outer_color: '#A78BFA', inner_color: '#A78BFA', outer_shape: 'star', inner_shape: 'star', outer_size: 28, inner_size: 7, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '★' },
   { type: 'event', label: 'Event', outer_color: '#059669', inner_color: '#059669', outer_shape: 'hexagon', inner_shape: 'circle', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '⬡' },
   { type: 'group', label: 'Group', outer_color: '#0d9488', inner_color: '#0d9488', outer_shape: 'pentagon', inner_shape: 'circle', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '⬠' },
-  { type: 'note', label: 'Note', outer_color: '#475569', inner_color: '#475569', outer_shape: 'square', inner_shape: 'circle', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '⯃' },
+  { type: 'note', label: 'Note', outer_color: '#475569', inner_color: '#475569', outer_shape: 'octagon', inner_shape: 'circle', outer_size: 28, inner_size: 5, outer_solid: false, inner_solid: true, display_mode: 'shape', icon: '⯃' },
 ];
 
 export const DEFAULT_SETTINGS: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
@@ -115,6 +116,7 @@ export const DEFAULT_SETTINGS: Omit<UserSettings, 'id' | 'user_id' | 'created_at
   context_label: 'Context',
   accent_color: '#3525cd',
   secondary_color: '#4f46e5',
+  map_bg_color: '#fcf9f8',
 };
 
 // ─── Helper getters ─────────────────────────────────────────────────

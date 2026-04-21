@@ -94,7 +94,7 @@ function MapCard({ map, nodeCount, onOpen, onEdit, onDelete }: { map: MapRecord;
       <div>
         <div className="flex items-start justify-between mb-3">
           <span className="text-3xl">{map.emoji}</span>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
             <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition"><Pencil size={14} /></button>
             <button onClick={() => { if (window.confirm(`Delete "${map.name}" and all its nodes?`)) onDelete(); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-error/60 hover:bg-error/5 transition"><Trash2 size={14} /></button>
           </div>

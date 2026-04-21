@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               }`}
             >
               <Map size={16} />
-              My Map
+              My Maps
             </Link>
             <Link
               href="/settings"

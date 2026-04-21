@@ -8,9 +8,9 @@ export function NoddicLogo({
   size?: 'small' | 'default' | 'large';
 }) {
   const dimensions = {
-    small: { icon: 24, text: 'text-lg', gap: 'gap-2', radius: 6, fontSize: 13, fontWeight: 700 },
-    default: { icon: 32, text: 'text-2xl', gap: 'gap-2.5', radius: 8, fontSize: 17, fontWeight: 700 },
-    large: { icon: 44, text: 'text-3xl', gap: 'gap-3', radius: 10, fontSize: 24, fontWeight: 800 },
+    small: { icon: 24, text: 'text-lg', gap: 'gap-2' },
+    default: { icon: 32, text: 'text-2xl', gap: 'gap-2.5' },
+    large: { icon: 44, text: 'text-3xl', gap: 'gap-3' },
   };
 
   const d = dimensions[size];
@@ -25,25 +25,8 @@ export function NoddicLogo({
         xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
       >
-        <rect
-          x="0"
-          y="0"
-          width="44"
-          height="44"
-          rx={d.radius}
-          fill="url(#noddic-grad)"
-        />
-        <text
-          x="22"
-          y="30"
-          textAnchor="middle"
-          fill="white"
-          fontSize={d.fontSize}
-          fontWeight={d.fontWeight}
-          fontFamily="Manrope, system-ui, sans-serif"
-        >
-          N
-        </text>
+        <circle cx="22" cy="22" r="20" stroke="url(#noddic-grad)" strokeWidth="2.5" fill="none" />
+        <circle cx="22" cy="22" r="7" fill="url(#noddic-grad)" />
         <defs>
           <linearGradient
             id="noddic-grad"
