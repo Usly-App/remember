@@ -35,6 +35,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="min-h-screen">{children}</body>
     </html>
