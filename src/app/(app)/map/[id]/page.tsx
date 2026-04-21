@@ -464,6 +464,7 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
   onSelectNode: (id: string | null) => void; onDragNode: (id: string, x: number, y: number) => void; onToggleCollapse: (id: string) => void;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [draggingCanvas, setDraggingCanvas] = useState(false);
@@ -474,57 +475,273 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
   const didDrag = useRef(false);
   const lastMoveTime = useRef(0);
 
-  useEffect(() => { if (svgRef.current) { const r = svgRef.current.getBoundingClientRect(); setPan({ x: r.width / 2, y: r.height / 2 }); } }, []);
+  // Pinch zoom state
+  const pinchStartDist = useRef(0);
+  const pinchStartZoom = useRef(1);
+  const pinchMidpoint = useRef({ x: 0, y: 0 });
+  const isPinching = useRef(false);
+  const touchCount = useRef(0);
 
-  const handleWheel = useCallback((e: WheelEvent) => { e.preventDefault(); setZoom((z) => Math.max(0.15, Math.min(3, z * (e.deltaY > 0 ? 0.92 : 1.08)))); }, []);
-  useEffect(() => { const el = svgRef.current; if (el) { el.addEventListener('wheel', handleWheel, { passive: false }); return () => el.removeEventListener('wheel', handleWheel); } }, [handleWheel]);
-  useEffect(() => { if (highlightId && positions[highlightId] && svgRef.current) { const rect = svgRef.current.getBoundingClientRect(); const pos = positions[highlightId]; setPan({ x: rect.width / 2 - pos.x * zoom, y: rect.height / 2 - pos.y * zoom }); setZoom((z) => Math.max(z, 1)); } }, [highlightId]);
+  // Tap detection
+  const tapStart = useRef({ x: 0, y: 0, time: 0 });
+  const tapNodeId = useRef<string | null>(null);
 
-  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
-    if ('touches' in e && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    if ('clientX' in e) return { x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY };
-    return { x: 0, y: 0 };
+  useEffect(() => {
+    if (svgRef.current) {
+      const r = svgRef.current.getBoundingClientRect();
+      setPan({ x: r.width / 2, y: r.height / 2 });
+    }
+  }, []);
+
+  // Desktop scroll wheel zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    setZoom((z) => Math.max(0.15, Math.min(3, z * (e.deltaY > 0 ? 0.92 : 1.08))));
+  }, []);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (el) {
+      el.addEventListener('wheel', handleWheel, { passive: false });
+      return () => el.removeEventListener('wheel', handleWheel);
+    }
+  }, [handleWheel]);
+
+  // Prevent default touch behaviors on the container
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const prevent = (e: TouchEvent) => { e.preventDefault(); };
+    el.addEventListener('touchmove', prevent, { passive: false });
+    el.addEventListener('touchstart', prevent, { passive: false });
+    return () => {
+      el.removeEventListener('touchmove', prevent);
+      el.removeEventListener('touchstart', prevent);
+    };
+  }, []);
+
+  // Highlight pan
+  useEffect(() => {
+    if (highlightId && positions[highlightId] && svgRef.current) {
+      const rect = svgRef.current.getBoundingClientRect();
+      const pos = positions[highlightId];
+      setPan({ x: rect.width / 2 - pos.x * zoom, y: rect.height / 2 - pos.y * zoom });
+      setZoom((z) => Math.max(z, 1));
+    }
+  }, [highlightId]);
+
+  const getTouchDist = (t1: React.Touch, t2: React.Touch) => {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const onDown = (e: React.MouseEvent | React.TouchEvent) => {
-    const t = e.target as HTMLElement;
-    const nel = t.closest('[data-node-id]');
-    if (nel && dragEnabled) {
-      const nid = nel.getAttribute('data-node-id')!;
-      const p = getPos(e);
+  const getTouchMidpoint = (t1: React.Touch, t2: React.Touch) => ({
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2,
+  });
+
+  // ─── Mouse handlers (desktop) ───────────────────────
+  const onMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const nodeEl = target.closest('[data-node-id]');
+
+    if (nodeEl && dragEnabled) {
+      const nid = nodeEl.getAttribute('data-node-id')!;
       const np = positions[nid];
-      if (np) { setDraggingNodeId(nid); dragStart.current = p; nodeStartPos.current = { x: np.x, y: np.y }; didDrag.current = false; return; }
+      if (np) {
+        setDraggingNodeId(nid);
+        dragStart.current = { x: e.clientX, y: e.clientY };
+        nodeStartPos.current = { x: np.x, y: np.y };
+        didDrag.current = false;
+        return;
+      }
     }
+
+    if (nodeEl && !dragEnabled) {
+      // Let click handler deal with it
+      return;
+    }
+
     setDraggingCanvas(true);
-    const p = getPos(e);
-    dragStart.current = p;
+    dragStart.current = { x: e.clientX, y: e.clientY };
     panStart.current = pan;
   };
 
-  const onMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    // Throttle touch moves to ~60fps
-    const now = Date.now();
-    if (now - lastMoveTime.current < 16) return;
-    lastMoveTime.current = now;
-
-    const p = getPos(e);
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggingNodeId) {
-      const dx = (p.x - dragStart.current.x) / zoom;
-      const dy = (p.y - dragStart.current.y) / zoom;
+      const dx = (e.clientX - dragStart.current.x) / zoom;
+      const dy = (e.clientY - dragStart.current.y) / zoom;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag.current = true;
       onDragNode(draggingNodeId, nodeStartPos.current.x + dx, nodeStartPos.current.y + dy);
       return;
     }
-    if (draggingCanvas) setPan({ x: panStart.current.x + (p.x - dragStart.current.x), y: panStart.current.y + (p.y - dragStart.current.y) });
+    if (draggingCanvas) {
+      setPan({
+        x: panStart.current.x + (e.clientX - dragStart.current.x),
+        y: panStart.current.y + (e.clientY - dragStart.current.y),
+      });
+    }
   }, [draggingNodeId, draggingCanvas, zoom, onDragNode]);
 
-  const onUp = () => {
-    if (draggingNodeId) { if (!didDrag.current) onSelectNode(draggingNodeId === selectedId ? null : draggingNodeId); setDraggingNodeId(null); return; }
+  const onMouseUp = () => {
+    if (draggingNodeId) {
+      if (!didDrag.current) onSelectNode(draggingNodeId === selectedId ? null : draggingNodeId);
+      setDraggingNodeId(null);
+      return;
+    }
     setDraggingCanvas(false);
   };
 
-  const onClick = (e: React.MouseEvent, id: string) => { if (dragEnabled) return; e.stopPropagation(); onSelectNode(id === selectedId ? null : id); };
-  const recenter = () => { if (svgRef.current) { const r = svgRef.current.getBoundingClientRect(); setPan({ x: r.width / 2, y: r.height / 2 }); setZoom(1); } };
+  const onNodeClick = (e: React.MouseEvent, id: string) => {
+    if (dragEnabled) return;
+    e.stopPropagation();
+    onSelectNode(id === selectedId ? null : id);
+  };
+
+  // ─── Touch handlers (mobile) ────────────────────────
+  const onTouchStart = (e: React.TouchEvent) => {
+    const touches = e.touches;
+    touchCount.current = touches.length;
+
+    if (touches.length === 2) {
+      // Start pinch zoom
+      isPinching.current = true;
+      pinchStartDist.current = getTouchDist(touches[0], touches[1]);
+      pinchStartZoom.current = zoom;
+      pinchMidpoint.current = getTouchMidpoint(touches[0], touches[1]);
+      panStart.current = pan;
+      // Cancel any single-touch drag
+      setDraggingCanvas(false);
+      setDraggingNodeId(null);
+      return;
+    }
+
+    if (touches.length === 1) {
+      isPinching.current = false;
+      const touch = touches[0];
+      const target = e.target as HTMLElement;
+      const nodeEl = target.closest('[data-node-id]');
+
+      // Record tap start for tap detection
+      tapStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+      tapNodeId.current = nodeEl?.getAttribute('data-node-id') || null;
+
+      if (nodeEl && dragEnabled) {
+        const nid = nodeEl.getAttribute('data-node-id')!;
+        const np = positions[nid];
+        if (np) {
+          setDraggingNodeId(nid);
+          dragStart.current = { x: touch.clientX, y: touch.clientY };
+          nodeStartPos.current = { x: np.x, y: np.y };
+          didDrag.current = false;
+          return;
+        }
+      }
+
+      // Start canvas pan
+      setDraggingCanvas(true);
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      panStart.current = pan;
+    }
+  };
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const now = Date.now();
+    if (now - lastMoveTime.current < 16) return;
+    lastMoveTime.current = now;
+
+    const touches = e.touches;
+
+    if (touches.length === 2 && isPinching.current) {
+      const dist = getTouchDist(touches[0], touches[1]);
+      const scale = dist / pinchStartDist.current;
+      const newZoom = Math.max(0.15, Math.min(3, pinchStartZoom.current * scale));
+
+      // Zoom toward the midpoint
+      const mid = getTouchMidpoint(touches[0], touches[1]);
+      const dx = mid.x - pinchMidpoint.current.x;
+      const dy = mid.y - pinchMidpoint.current.y;
+
+      setZoom(newZoom);
+      setPan({
+        x: panStart.current.x + dx,
+        y: panStart.current.y + dy,
+      });
+      return;
+    }
+
+    if (touches.length === 1 && !isPinching.current) {
+      const touch = touches[0];
+
+      if (draggingNodeId) {
+        const dx = (touch.clientX - dragStart.current.x) / zoom;
+        const dy = (touch.clientY - dragStart.current.y) / zoom;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag.current = true;
+        onDragNode(draggingNodeId, nodeStartPos.current.x + dx, nodeStartPos.current.y + dy);
+        return;
+      }
+
+      if (draggingCanvas) {
+        const dx = touch.clientX - dragStart.current.x;
+        const dy = touch.clientY - dragStart.current.y;
+        // Mark as dragged if moved more than a small threshold
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDrag.current = true;
+        setPan({
+          x: panStart.current.x + dx,
+          y: panStart.current.y + dy,
+        });
+      }
+    }
+  }, [draggingNodeId, draggingCanvas, zoom, onDragNode]);
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const remaining = e.touches.length;
+
+    if (isPinching.current && remaining < 2) {
+      isPinching.current = false;
+      // If one finger remains, start panning from that finger
+      if (remaining === 1) {
+        const touch = e.touches[0];
+        setDraggingCanvas(true);
+        dragStart.current = { x: touch.clientX, y: touch.clientY };
+        panStart.current = pan;
+        didDrag.current = false;
+      }
+      return;
+    }
+
+    if (draggingNodeId) {
+      if (!didDrag.current) onSelectNode(draggingNodeId === selectedId ? null : draggingNodeId);
+      setDraggingNodeId(null);
+      return;
+    }
+
+    // Tap detection — if finger didn't move much and was quick
+    if (remaining === 0 && !dragEnabled) {
+      const elapsed = Date.now() - tapStart.current.time;
+      const ct = e.changedTouches[0];
+      if (ct && elapsed < 300) {
+        const dx = Math.abs(ct.clientX - tapStart.current.x);
+        const dy = Math.abs(ct.clientY - tapStart.current.y);
+        if (dx < 10 && dy < 10 && tapNodeId.current) {
+          onSelectNode(tapNodeId.current === selectedId ? null : tapNodeId.current);
+        }
+      }
+    }
+
+    setDraggingCanvas(false);
+    didDrag.current = false;
+    touchCount.current = remaining;
+  };
+
+  const recenter = () => {
+    if (svgRef.current) {
+      const r = svgRef.current.getBoundingClientRect();
+      setPan({ x: r.width / 2, y: r.height / 2 });
+      setZoom(1);
+    }
+  };
 
   const hiddenIds = useMemo(() => {
     const h = new Set<string>();
@@ -536,13 +753,25 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
   const visibleNodes = nodes.filter((n) => !hiddenIds.has(n.id));
   const uniqueTypes = Array.from(new Set(visibleNodes.map((n) => n.type)));
   const isHL = highlightId !== null;
+  const darkBg = isDarkBg(settings?.map_bg_color);
 
   return (
-    <div className="relative w-full h-full" style={{ touchAction: 'none', background: settings?.map_bg_color || '#fcf9f8' }}>
-      <svg ref={svgRef} className="w-full h-full" style={{ cursor: draggingNodeId || draggingCanvas ? 'grabbing' : 'grab', touchAction: 'none' }} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}>
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ touchAction: 'none', background: settings?.map_bg_color || '#fcf9f8' }}>
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        style={{ cursor: draggingNodeId || draggingCanvas ? 'grabbing' : 'grab', touchAction: 'none' }}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            <circle cx="20" cy="20" r="0.8" fill={isDarkBg(settings?.map_bg_color) ? '#ffffff' : '#c7c4d8'} opacity="0.3" />
+            <circle cx="20" cy="20" r="0.8" fill={darkBg ? '#ffffff' : '#c7c4d8'} opacity="0.3" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
@@ -567,16 +796,16 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
             const count = childCountMap[n.id] || 0; const isCollapsed = collapsedIds.has(n.id);
 
             return (
-              <g key={n.id} data-node-id={n.id} style={{ cursor: dragEnabled ? (isDrag ? 'grabbing' : 'grab') : 'pointer', opacity: dimmed ? 0.2 : 1, transition: 'opacity 0.3s' }} onClick={(e) => onClick(e, n.id)}>
+              <g key={n.id} data-node-id={n.id} style={{ cursor: dragEnabled ? (isDrag ? 'grabbing' : 'grab') : 'pointer', opacity: dimmed ? 0.2 : 1, transition: 'opacity 0.3s' }} onClick={(e) => onNodeClick(e, n.id)}>
                 {isSel && <circle cx={p.x} cy={p.y} r={oz + 10} fill={oc} opacity={0.1} />}
                 {isHLNode && <circle cx={p.x} cy={p.y} r={oz + 12} fill={oc} opacity={0.15}><animate attributeName="r" values={`${oz + 10};${oz + 16};${oz + 10}`} dur="1.5s" repeatCount="indefinite" /></circle>}
                 {isDrag && <circle cx={p.x} cy={p.y} r={oz + 6} fill={oc} opacity={0.08} stroke={oc} strokeWidth={1} strokeDasharray="4 3" />}
                 {renderNode(p.x, p.y, os, oc, oz, oSolid, dm, is2, ic, iz, iSolid, ab, isSel, n.image_url, n.id)}
-                <text x={p.x} y={p.y + oz + 16} textAnchor="middle" fill={isDarkBg(settings?.map_bg_color) ? '#e5e2e1' : '#1c1b1b'} fontSize={ir ? 13 : 11} fontWeight={ir ? 700 : 500} fontFamily="Manrope, system-ui, sans-serif">{n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name}</text>
-                {n.hint && !ir && <text x={p.x} y={p.y + oz + 29} textAnchor="middle" fill={isDarkBg(settings?.map_bg_color) ? '#9B99A1' : '#777587'} fontSize={9} fontFamily="Inter, system-ui, sans-serif">{n.hint.length > 28 ? n.hint.slice(0, 27) + '…' : n.hint}</text>}
+                <text x={p.x} y={p.y + oz + 16} textAnchor="middle" fill={darkBg ? '#e5e2e1' : '#1c1b1b'} fontSize={ir ? 13 : 11} fontWeight={ir ? 700 : 500} fontFamily="Manrope, system-ui, sans-serif">{n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name}</text>
+                {n.hint && !ir && <text x={p.x} y={p.y + oz + 29} textAnchor="middle" fill={darkBg ? '#9B99A1' : '#777587'} fontSize={9} fontFamily="Inter, system-ui, sans-serif">{n.hint.length > 28 ? n.hint.slice(0, 27) + '…' : n.hint}</text>}
                 {count > 0 && (
                   <g onClick={(e) => { e.stopPropagation(); onToggleCollapse(n.id); }} style={{ cursor: 'pointer' }}>
-                    <circle cx={p.x + oz * 0.7} cy={p.y - oz * 0.7} r={9} fill={isCollapsed ? oc : '#fcf9f8'} stroke={oc} strokeWidth={1.5} />
+                    <circle cx={p.x + oz * 0.7} cy={p.y - oz * 0.7} r={9} fill={isCollapsed ? oc : darkBg ? '#27272a' : '#fcf9f8'} stroke={oc} strokeWidth={1.5} />
                     <text x={p.x + oz * 0.7} y={p.y - oz * 0.7 + 1} textAnchor="middle" dominantBaseline="central" fill={isCollapsed ? 'white' : oc} fontSize={9} fontWeight={700} fontFamily="Manrope, system-ui, sans-serif">{count}</text>
                   </g>
                 )}
@@ -606,7 +835,6 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
     </div>
   );
 }
-
 // ─── Map Canvas Page ────────────────────────────────────────────────
 export default function MapCanvasPage() {
   const params = useParams();
