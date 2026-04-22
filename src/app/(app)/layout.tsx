@@ -19,7 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-[100dvh] flex flex-col bg-surface overflow-hidden">
       {/* Top bar */}
-      <header className="flex-shrink-0 h-14 flex justify-between items-center px-5 md:px-8 bg-surface/80 backdrop-blur-xl border-b border-surface-container z-50">
+      <header className="flex-shrink-0 h-16 flex justify-between items-center px-5 md:px-8 bg-surface/80 backdrop-blur-xl border-b border-surface-container z-50">
         <div className="flex items-center gap-8">
           <NoddicLogo size="small" href="/map" />
           <nav className="hidden md:flex items-center gap-1">

@@ -373,7 +373,7 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
   const detailRows = [{ label: 'Type', value: node.type.charAt(0).toUpperCase() + node.type.slice(1) }, { label: 'Hint', value: node.hint }, { label: 'Description', value: node.description }, { label: 'Address', value: node.address }, { label: 'Relationship', value: node.relationship }];
 
   return (
-    <div className="fixed top-14 inset-x-0 bottom-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 sm:w-[380px] sm:max-w-[90vw] sm:h-full bg-surface-container-lowest sm:border-l border-surface-container-high z-40 flex flex-col animate-slide-right shadow-2xl">
+    <div className="fixed top-16 inset-x-0 bottom-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 sm:w-[380px] sm:max-w-[90vw] sm:h-full bg-surface-container-lowest sm:border-l border-surface-container-high z-40 flex flex-col animate-slide-right shadow-2xl">
       <div className="flex items-center justify-between p-5 border-b border-surface-container">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 text-xs font-headline font-bold uppercase tracking-wider px-3 py-1 rounded-full" style={{ background: nodeColor + '18', color: nodeColor }}>
@@ -1031,7 +1031,7 @@ export default function MapCanvasPage() {
   });
 
   return (
-    <div className="relative flex-1 overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       <MapCanvas nodes={nodes} positions={positions} selectedId={selectedId} highlightId={highlightId} settings={settings} dragEnabled={dragEnabled} collapsedIds={collapsedIds} childCountMap={childCountMap} onSelectNode={setSelectedId} onDragNode={handleDragNode} onToggleCollapse={handleToggleCollapse} />
 
       {/* Toolbar — single row */}
