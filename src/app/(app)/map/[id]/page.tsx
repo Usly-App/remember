@@ -1031,7 +1031,7 @@ export default function MapCanvasPage() {
   });
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden" style={{ height: 'calc(100dvh - 64px)' }}>
       <MapCanvas nodes={nodes} positions={positions} selectedId={selectedId} highlightId={highlightId} settings={settings} dragEnabled={dragEnabled} collapsedIds={collapsedIds} childCountMap={childCountMap} onSelectNode={setSelectedId} onDragNode={handleDragNode} onToggleCollapse={handleToggleCollapse} />
 
       {/* Toolbar — single row */}
