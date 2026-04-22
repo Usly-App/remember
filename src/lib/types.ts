@@ -38,6 +38,7 @@ export interface MapNode {
   inner_solid: boolean | null;
   image_url: string | null;
   tags: string[];
+  completed: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -1,45 +1,47 @@
 # Noddic — Remember Who, Where, What & Why
 
-A visual mind map application for remembering and organizing anything — people, places, ideas, projects. Create multiple maps, customize every node's appearance, upload images, search, collapse branches, and drag nodes to arrange your world.
+A visual mind map application for remembering and organizing anything — people, places, ideas, projects. Create multiple maps from templates, customize every node, upload images, tag, search, collapse branches, mark complete, and export to PDF.
 
 **Live:** [noddic.com](https://noddic.com)
 
 ## Features
 
-### Multiple Maps
-Create as many maps as you need — one for people, one for travel planning, one for study notes. Each map has its own emoji, name, and description.
+### Multiple Maps with Templates
+Create maps from scratch or use one of 7 rich templates (People, Travel, Study, Recipe, Project, Neighbourhood, Idea). Templates pre-create 15-25 nodes in a 3-level tree structure so you can start organizing immediately.
 
 ### Fully Customizable Nodes
-Every node can be personalized:
-- **8 preset types** — Person, Place, Context, Thing, Idea, Event, Group, Note
+- **8 preset types** — Person, Place, Context, Thing, Idea, Event, Group, Note (each with a unique shape)
 - **Custom types** — name your own (skill, recipe, tool, anything)
-- **Outer shape** — circle, square, diamond, triangle, hexagon, star, pentagon, octagon
-- **Inner shape** — independent shape inside the outer, or ABC mode (1-2 characters)
+- **Shape options** — circle, square, diamond, triangle, hexagon, star, pentagon, octagon
 - **Colors** — 12 presets + custom color picker for outer and inner independently
-- **Size sliders** — control outer and inner sizes independently
-- **Solid or outline** — toggle for both outer and inner shapes
+- **Display modes** — Shape-in-shape or ABC (1-2 character) mode
 - **Images** — upload photos that fill the node shape on the canvas
+- **Tags** — add multiple tags to any node, searchable
+- **Completed state** — mark nodes as done with a toggle
 
 ### Interactive Canvas
-- **Pan & zoom** — drag to pan, scroll to zoom, pinch on touch
-- **Drag nodes** — toggle "Move Nodes" mode to reposition any node, auto-saves position
-- **Search (⌘K)** — find nodes by name, hint, description, or type; pans to result with highlight animation
-- **Collapse/expand** — click the count badge to hide/show a node's children
-- **Node count badges** — small badges showing direct child count on each parent node
-
-### Memory Hints
-Every node can carry a hint — "tall, red hair, met through Dave" — displayed as a subtitle on the canvas.
-
-### Authentication
-- Email/password signup and login via Supabase Auth
-- Forgot password flow with email reset link
-- Route protection via Next.js middleware
+- **Pan & zoom** — drag to pan, scroll wheel to zoom, pinch-to-zoom on mobile
+- **Drag nodes** — toggle move mode to reposition any node, auto-saves
+- **Search (⌘K)** — find nodes by name, hint, description, type, or tag
+- **Collapse/expand** — click count badges to hide/show branches
+- **Export to PDF** — download your map as a PDF or SVG file
+- **Dark background support** — adaptive grid, text, and badge colors
 
 ### Settings
-- Custom terminology (rename "Node", "Person", "Place", "Context")
-- Accent color picker (8 presets + custom)
-- Profile management
-- Data erasure
+- Profile (display name)
+- Custom terminology labels
+- Accent color (8 presets + custom)
+- Map background color (10 presets + custom, including dark options)
+- Danger zone (erase data, delete account)
+
+### Mobile Optimized
+- Pinch-to-zoom and tap detection
+- Full-screen node detail panel on mobile
+- Compact toolbar with responsive sizing
+- Dynamic viewport height (accounts for mobile browser chrome)
+
+### PWA Ready
+Installable on desktop (Chrome/Edge) and mobile. Manifest and icons included.
 
 ## Tech Stack
 
@@ -49,106 +51,76 @@ Every node can carry a hint — "tall, red hair, met through Dave" — displayed
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (email/password) |
 | File Storage | Supabase Storage (node images) |
+| PDF Export | jsPDF + svg2pdf.js |
 | Styling | Tailwind CSS (custom theme) |
 | Icons | Lucide React |
 | Fonts | Manrope (headlines) + Inter (body) |
 | Deployment | Vercel |
-| Email | Resend (planned) |
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── page.tsx                      # Landing page (public)
-│   ├── layout.tsx                    # Root layout
+│   ├── page.tsx                      # Landing page
+│   ├── layout.tsx                    # Root layout (meta, icons, viewport)
 │   ├── globals.css                   # Tailwind + custom styles
 │   ├── login/page.tsx                # Login
 │   ├── signup/page.tsx               # Signup
 │   ├── forgot-password/page.tsx      # Forgot password
 │   ├── reset-password/page.tsx       # Set new password
 │   ├── auth/callback/route.ts        # Supabase auth callback
+│   ├── api/account/route.ts          # DELETE endpoint for account deletion
 │   ├── privacy/page.tsx              # Privacy policy
 │   ├── terms/page.tsx                # Terms of service
 │   └── (app)/                        # Authenticated route group
-│       ├── layout.tsx                # App shell (header, nav)
+│       ├── layout.tsx                # App shell (header, nav, h-[100dvh])
 │       ├── map/
-│       │   ├── page.tsx              # My Maps dashboard
+│       │   ├── page.tsx              # My Maps dashboard + template picker
 │       │   └── [id]/
-│       │       └── page.tsx          # Map canvas (the core page)
+│       │       └── page.tsx          # Map canvas (core page)
 │       └── settings/page.tsx         # User settings
 ├── components/
-│   └── logo.tsx                      # NoddicLogo component
+│   ├── logo.tsx                      # NoddicLogo (circle outline + inner circle)
+│   └── loader.tsx                    # NoddicLoader (branded loading animation)
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts                 # Browser client
 │   │   ├── server.ts                 # Server client
 │   │   └── middleware.ts             # Auth middleware
-│   ├── types.ts                      # All TypeScript types, presets, helper getters
+│   ├── types.ts                      # Types, presets, helper getters
 │   ├── hooks.ts                      # useUser, useMaps, useNodes, useSettings
 │   └── layout.ts                     # Radial tree layout algorithm
 ├── middleware.ts                      # Route protection
-supabase/
-└── schema.sql                        # Base schema (see SQL migrations below)
+public/
+├── favicon.ico                       # Multi-size favicon
+├── favicon-16x16.png, favicon-32x32.png
+├── icon-192.png, icon-512.png        # PWA icons
+├── icon-192-maskable.png, icon-512-maskable.png
+├── apple-touch-icon.png              # iOS icon
+├── og-image.png                      # Social sharing image
+└── manifest.json                     # PWA manifest
 ```
 
 ## Database Schema
 
 ### `maps`
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to auth.users |
-| name | text | Map name |
-| emoji | text | Map icon emoji |
-| description | text | Optional description |
+id, user_id, name, emoji, description, created_at, updated_at
 
 ### `map_nodes`
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to auth.users |
-| map_id | uuid | FK to maps |
-| parent_id | uuid | FK to map_nodes (null = root) |
-| name | text | Display name |
-| type | text | Any string (person, place, custom) |
-| hint | text | Memory hint |
-| description | text | Longer notes |
-| address | text | For places |
-| relationship | text | For people |
-| meta | jsonb | Flexible metadata |
-| position_x/y | float | Manual position (null = auto-layout) |
-| outer_shape | text | circle, square, diamond, etc. |
-| outer_color | text | Hex color |
-| outer_size | float | Radius in px |
-| outer_solid | boolean | Solid fill or outline |
-| inner_shape | text | Inner shape |
-| inner_color | text | Inner hex color |
-| inner_size | float | Inner radius |
-| inner_solid | boolean | Inner fill mode |
-| display_mode | text | 'shape' or 'abc' |
-| abc | text | 1-2 characters for ABC mode |
-| image_url | text | Supabase Storage URL |
+id, user_id, map_id, parent_id, name, type, hint, description, address, relationship, meta, position_x, position_y, outer_shape, outer_color, outer_size, outer_solid, inner_shape, inner_color, inner_size, inner_solid, display_mode, abc, image_url, tags, completed, created_at, updated_at
 
 ### `user_settings`
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to auth.users (unique) |
-| display_name | text | User's name |
-| node/person/place/context_label | text | Custom terminology |
-| accent_color | text | Primary accent hex |
-| secondary_color | text | Secondary accent hex |
-
-### Security
-- RLS on all tables — users can only access their own data
-- Cascade deletes throughout
-- Auto-created user_settings on signup (database trigger)
+id, user_id, display_name, node_label, person_label, place_label, context_label, accent_color, secondary_color, map_bg_color, created_at, updated_at
 
 ### Storage
 - **Bucket:** `node-images` (public)
 - **Path:** `{user_id}/{node_id}.{ext}`
-- **Policies:** authenticated users can upload/delete their own folder; public read
+
+### Security
+- RLS on all tables (auth.uid() = user_id)
+- Cascade deletes throughout
+- Account deletion via API route with service role key
 
 ## Local Development
 
@@ -157,30 +129,24 @@ git clone https://github.com/YOUR-USERNAME/remember.git
 cd remember
 npm install
 cp .env.local.example .env.local
-# Add your Supabase URL and anon key to .env.local
+# Add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 npm run dev
 ```
 
-## Deployment
+## Environment Variables
 
-1. Push to GitHub
-2. Import in Vercel, add env vars
-3. Update Supabase Auth redirect URLs for your domain
-4. Done — auto-deploys on push
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | For account deletion (server-side only) |
 
 ## Planned Features
 
-- [ ] Settings page overhaul (reflect new customization options)
-- [ ] Logo update (circle outline with inner circle)
-- [ ] Header nav label fix ("My Maps")
-- [ ] Toolbar layout cleanup
-- [ ] Dark mode / map background color
 - [ ] Multi-parent connections
-- [ ] Tags/labels on nodes
-- [ ] Export as image/PDF
-- [ ] PWA support
 - [ ] Resend email integration
 - [ ] AI-assisted node creation
+- [ ] Custom icon sets (Lucide/Iconify)
 
 ## License
 

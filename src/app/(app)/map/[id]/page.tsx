@@ -22,7 +22,7 @@ import {
   getNodeAbc,
 } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock, Palette, Search, ChevronDown, ChevronLeft, ImagePlus, Trash, Tag, Download } from 'lucide-react';
+import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock, Palette, Search, ChevronDown, ChevronLeft, ImagePlus, Trash, Tag, Download, CheckCircle2, Circle } from 'lucide-react';
 import { NoddicLoader } from '@/components/loader';
 
 const isDarkBg = (color?: string | null) => ['#1c1b1b', '#0f172a', '#27272a', '#111827'].includes(color || '');
@@ -413,6 +413,7 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
         {!editing ? (
           <>
             <button onClick={() => onAddChild(node.id)} className="w-full text-white py-3 rounded-xl font-headline font-bold text-sm shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg, ${nodeColor}, ${nodeColor}dd)` }}><Plus size={16} /> Add from {node.name}</button>
+            <button onClick={() => onUpdate(node.id, { completed: !node.completed })} className={`w-full py-2.5 rounded-xl font-headline font-semibold text-sm border transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${node.completed ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'border-outline-variant text-on-surface-variant hover:bg-surface-container'}`}>{node.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}{node.completed ? 'Completed' : 'Mark Complete'}</button>
             <div className="flex gap-2">
               <button onClick={() => setEditing(true)} className="flex-1 py-2.5 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition flex items-center justify-center gap-2"><Pencil size={14} /> Edit</button>
               {children.length > 0 && <button onClick={() => onToggleCollapse(node.id)} className="py-2.5 px-3 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition flex items-center justify-center" title="Collapse/expand"><ChevronDown size={14} /></button>}
@@ -828,7 +829,7 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
                 {isHLNode && <circle cx={p.x} cy={p.y} r={oz + 12} fill={oc} opacity={0.15}><animate attributeName="r" values={`${oz + 10};${oz + 16};${oz + 10}`} dur="1.5s" repeatCount="indefinite" /></circle>}
                 {isDrag && <circle cx={p.x} cy={p.y} r={oz + 6} fill={oc} opacity={0.08} stroke={oc} strokeWidth={1} strokeDasharray="4 3" />}
                 {renderNode(p.x, p.y, os, oc, oz, oSolid, dm, is2, ic, iz, iSolid, ab, isSel, n.image_url, n.id)}
-                <text x={p.x} y={p.y + oz + 16} textAnchor="middle" fill={darkBg ? '#e5e2e1' : '#1c1b1b'} fontSize={ir ? 13 : 11} fontWeight={ir ? 700 : 500} fontFamily="Manrope, system-ui, sans-serif">{n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name}</text>
+                <text x={p.x} y={p.y + oz + 16} textAnchor="middle" fill={n.completed ? '#059669' : (darkBg ? '#e5e2e1' : '#1c1b1b')} fontSize={ir ? 13 : 11} fontWeight={ir ? 700 : 500} fontFamily="Manrope, system-ui, sans-serif">{n.completed ? '✓ ' : ''}{n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name}</text>
                 {n.hint && !ir && <text x={p.x} y={p.y + oz + 29} textAnchor="middle" fill={darkBg ? '#9B99A1' : '#777587'} fontSize={9} fontFamily="Inter, system-ui, sans-serif">{n.hint.length > 28 ? n.hint.slice(0, 27) + '…' : n.hint}</text>}
                 {count > 0 && (
                   <g onClick={(e) => { e.stopPropagation(); onToggleCollapse(n.id); }} style={{ cursor: 'pointer' }}>
@@ -1016,7 +1017,7 @@ export default function MapCanvasPage() {
           parent_id: null, map_id: mapId, name, type: 'user', hint: null, description: null, address: null, relationship: null, meta: {}, position_x: null, position_y: null,
           color: settings?.accent_color || '#3525cd', display_mode: 'abc', shape: 'circle', abc: name.charAt(0).toUpperCase(),
           outer_shape: 'circle', outer_color: settings?.accent_color || '#3525cd', outer_size: 38, outer_solid: true,
-          inner_shape: 'circle', inner_color: '#ffffff', inner_size: 16, inner_solid: true, image_url: null, tags: [],
+          inner_shape: 'circle', inner_color: '#ffffff', inner_size: 16, inner_solid: true, image_url: null, tags: [], completed: false,
         });
       }} />
     );
@@ -1028,7 +1029,7 @@ export default function MapCanvasPage() {
     meta: {}, position_x: null, position_y: null,
     color: data.outerColor, display_mode: data.displayMode, shape: data.outerShape, abc: data.abc || data.name.charAt(0).toUpperCase(),
     outer_shape: data.outerShape, outer_color: data.outerColor, outer_size: data.outerSize, outer_solid: data.outerSolid,
-    inner_shape: data.innerShape, inner_color: data.innerColor, inner_size: data.innerSize, inner_solid: data.innerSolid, image_url: null, tags: data.tags || [],
+    inner_shape: data.innerShape, inner_color: data.innerColor, inner_size: data.innerSize, inner_solid: data.innerSolid, image_url: null, tags: data.tags || [], completed: false,
   });
 
   return (
