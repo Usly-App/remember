@@ -6,6 +6,7 @@ import { useUser, useSettings, useMaps } from '@/lib/hooks';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { AlertTriangle, Check, RotateCcw, Palette, Tag, User, Map, Trash2 } from 'lucide-react';
+import { NoddicLoader } from '@/components/loader';
 
 const ACCENT_PRESETS = [
   { name: 'Indigo', value: '#3525cd', secondary: '#4f46e5' },
@@ -107,7 +108,7 @@ export default function SettingsPage() {
   if (userLoading || settingsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-2 border-surface-container-high border-t-primary rounded-full animate-spin" />
+        <NoddicLoader size={48} />
       </div>
     );
   }

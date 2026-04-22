@@ -23,6 +23,7 @@ import {
 } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock, Palette, Search, ChevronDown, ChevronLeft, ImagePlus, Trash, Tag, Download } from 'lucide-react';
+import { NoddicLoader } from '@/components/loader';
 
 const isDarkBg = (color?: string | null) => ['#1c1b1b', '#0f172a', '#27272a', '#111827'].includes(color || '');
 
@@ -1004,7 +1005,7 @@ export default function MapCanvasPage() {
     setTimeout(() => setHighlightId(null), 2500);
   }, [nodes, collapsedIds]);
 
-  if (userLoading || nodesLoading || mapsLoading) return <div className="flex-1 flex items-center justify-center"><div className="w-8 h-8 border-2 border-surface-container-high border-t-primary rounded-full animate-spin" /></div>;
+  if (userLoading || nodesLoading || mapsLoading) return <div className="flex-1 flex items-center justify-center"><NoddicLoader size={48} /></div>;
   if (!user) { router.push('/login'); return null; }
   if (!currentMap) { router.push('/map'); return null; }
 
@@ -1062,7 +1063,7 @@ export default function MapCanvasPage() {
 
       {/* Panels & Modals */}
       {selectedNode && !addingFromId && <NodePanel node={selectedNode} nodes={nodes} settings={settings} userId={user.id} onUpdate={(id, d) => updateNode(id, d)} onDelete={(id) => { deleteNode(id); setSelectedId(null); }} onAddChild={(pid) => setAddingFromId(pid)} onResetPosition={handleResetPosition} onToggleCollapse={handleToggleCollapse} onClose={() => setSelectedId(null)} />}
-      {addingFromNode && <AddNodeModal parentNode={addingFromNode} settings={settings} onAdd={async (data) => { const r = await addNode(buildNodeData(data)); setAddingFromId(null); if (r?.data) setSelectedId(r.data.id); }} onClose={() => setAddingFromId(null)} />}
+      {addingFromNode && <AddNodeModal parentNode={addingFromNode} settings={settings} onAdd={async (data) => { const r = await addNode(buildNodeData({ ...data, parentId: addingFromNode.id })); setAddingFromId(null); if (r?.data) setSelectedId(r.data.id); }} onClose={() => setAddingFromId(null)} />}
       {quickAddOpen && <QuickAddModal nodes={nodes} settings={settings} onAdd={async (data) => { const r = await addNode(buildNodeData(data)); setQuickAddOpen(false); if (r?.data) setSelectedId(r.data.id); }} onClose={() => setQuickAddOpen(false)} />}
       <SearchOverlay nodes={nodes} settings={settings} open={searchOpen} onClose={() => setSearchOpen(false)} onSelect={handleSearchSelect} />
     </div>

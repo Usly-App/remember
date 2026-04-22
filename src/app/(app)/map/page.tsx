@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase/client';
 import { NODE_PRESETS } from '@/lib/types';
 import type { MapRecord } from '@/lib/types';
 import { Plus, X, Pencil, Trash2, Map, Users, Plane, BookOpen, ChefHat, Briefcase, Home, Lightbulb, FileText } from 'lucide-react';
+import { NoddicLoader } from '@/components/loader';
 
-const EMOJI_OPTIONS = ['🗺️', '👥', '✈️', '📚', '🏗️', '🏠', '🍳', '💡', '🎯', '🎵', '💼', '🏋️', '🌍', '❤️', '📝', '🔬'];
+const EMOJI_OPTIONS = ['', '🗺️', '👥', '✈️', '📚', '🏗️', '🏠', '🍳', '💡', '🎯', '🎵', '💼', '🏋️', '🌍', '❤️', '📝', '🔬'];
 
 // ─── Map Templates ──────────────────────────────────────────────────
 interface MapTemplate {
@@ -19,7 +20,7 @@ interface MapTemplate {
   icon: any;
   color: string;
   centerNode: string;
-  children: { name: string; type: string }[];
+  children: { name: string; type: string; children?: { name: string; type: string }[] }[];
 }
 
 const MAP_TEMPLATES: MapTemplate[] = [
@@ -32,70 +33,173 @@ const MAP_TEMPLATES: MapTemplate[] = [
     color: '#4ECDC4',
     centerNode: 'Me',
     children: [
-      { name: 'Family', type: 'group' },
-      { name: 'Friends', type: 'group' },
-      { name: 'Work', type: 'context' },
+      { name: 'Family', type: 'group', children: [
+        { name: 'Parents', type: 'person' },
+        { name: 'Siblings', type: 'person' },
+        { name: 'Extended', type: 'person' },
+      ]},
+      { name: 'Friends', type: 'group', children: [
+        { name: 'Close Friends', type: 'person' },
+        { name: 'School Friends', type: 'person' },
+        { name: 'Online Friends', type: 'person' },
+      ]},
+      { name: 'Work', type: 'context', children: [
+        { name: 'Team', type: 'group' },
+        { name: 'Manager', type: 'person' },
+        { name: 'Clients', type: 'group' },
+      ]},
       { name: 'Neighbours', type: 'group' },
+      { name: 'Community', type: 'group', children: [
+        { name: 'Sports', type: 'context' },
+        { name: 'Clubs', type: 'context' },
+      ]},
     ],
   },
   {
     id: 'travel',
     name: 'Travel',
     emoji: '✈️',
-    description: 'Plan a trip with all the details',
+    description: 'Plan every detail of your trip',
     icon: Plane,
     color: '#FF6B6B',
     centerNode: 'My Trip',
     children: [
-      { name: 'Flights', type: 'thing' },
-      { name: 'Hotels', type: 'place' },
-      { name: 'Activities', type: 'event' },
-      { name: 'Food', type: 'place' },
+      { name: 'Getting There', type: 'thing', children: [
+        { name: 'Flights', type: 'thing' },
+        { name: 'Transfers', type: 'thing' },
+        { name: 'Visa / Docs', type: 'note' },
+      ]},
+      { name: 'Accommodation', type: 'place', children: [
+        { name: 'Hotels', type: 'place' },
+        { name: 'Airbnb', type: 'place' },
+      ]},
+      { name: 'Activities', type: 'event', children: [
+        { name: 'Must See', type: 'place' },
+        { name: 'Day Trips', type: 'event' },
+        { name: 'Tours', type: 'event' },
+        { name: 'Nightlife', type: 'event' },
+      ]},
+      { name: 'Food & Drink', type: 'place', children: [
+        { name: 'Restaurants', type: 'place' },
+        { name: 'Cafes', type: 'place' },
+        { name: 'Street Food', type: 'place' },
+      ]},
+      { name: 'Budget', type: 'note', children: [
+        { name: 'Transport', type: 'note' },
+        { name: 'Accommodation', type: 'note' },
+        { name: 'Food', type: 'note' },
+        { name: 'Activities', type: 'note' },
+      ]},
+      { name: 'Packing', type: 'thing' },
     ],
   },
   {
     id: 'study',
     name: 'Study',
     emoji: '📚',
-    description: 'Organize your learning and notes',
+    description: 'Organize your learning and revision',
     icon: BookOpen,
     color: '#4f46e5',
     centerNode: 'Subject',
     children: [
-      { name: 'Key Concepts', type: 'idea' },
-      { name: 'Resources', type: 'thing' },
-      { name: 'Questions', type: 'note' },
-      { name: 'Notes', type: 'note' },
+      { name: 'Key Concepts', type: 'idea', children: [
+        { name: 'Definitions', type: 'note' },
+        { name: 'Theories', type: 'idea' },
+        { name: 'Formulas', type: 'note' },
+      ]},
+      { name: 'Resources', type: 'thing', children: [
+        { name: 'Textbooks', type: 'thing' },
+        { name: 'Videos', type: 'thing' },
+        { name: 'Articles', type: 'thing' },
+        { name: 'Past Papers', type: 'thing' },
+      ]},
+      { name: 'Notes', type: 'note', children: [
+        { name: 'Lecture Notes', type: 'note' },
+        { name: 'Summaries', type: 'note' },
+      ]},
+      { name: 'Questions', type: 'note', children: [
+        { name: 'To Ask', type: 'note' },
+        { name: 'Answered', type: 'note' },
+      ]},
+      { name: 'Exam Prep', type: 'event', children: [
+        { name: 'Study Plan', type: 'note' },
+        { name: 'Practice Tests', type: 'thing' },
+        { name: 'Weak Areas', type: 'note' },
+      ]},
     ],
   },
   {
     id: 'recipe',
     name: 'Recipe',
     emoji: '🍳',
-    description: 'Break down a recipe or meal plan',
+    description: 'Break down recipes and meal planning',
     icon: ChefHat,
     color: '#E8A838',
     centerNode: 'Recipe Name',
     children: [
-      { name: 'Ingredients', type: 'thing' },
-      { name: 'Steps', type: 'note' },
-      { name: 'Tips', type: 'idea' },
-      { name: 'Variations', type: 'idea' },
+      { name: 'Ingredients', type: 'thing', children: [
+        { name: 'Fresh', type: 'thing' },
+        { name: 'Pantry', type: 'thing' },
+        { name: 'Spices', type: 'thing' },
+      ]},
+      { name: 'Preparation', type: 'note', children: [
+        { name: 'Prep Work', type: 'note' },
+        { name: 'Cooking Steps', type: 'note' },
+        { name: 'Plating', type: 'note' },
+      ]},
+      { name: 'Timing', type: 'event', children: [
+        { name: 'Prep Time', type: 'note' },
+        { name: 'Cook Time', type: 'note' },
+        { name: 'Rest Time', type: 'note' },
+      ]},
+      { name: 'Tips & Tricks', type: 'idea' },
+      { name: 'Variations', type: 'idea', children: [
+        { name: 'Vegetarian', type: 'idea' },
+        { name: 'Spicy', type: 'idea' },
+        { name: 'Quick Version', type: 'idea' },
+      ]},
+      { name: 'Pairings', type: 'thing', children: [
+        { name: 'Side Dishes', type: 'thing' },
+        { name: 'Drinks', type: 'thing' },
+      ]},
     ],
   },
   {
     id: 'project',
     name: 'Project',
     emoji: '🏗️',
-    description: 'Plan and manage a project',
+    description: 'Plan and manage any project',
     icon: Briefcase,
     color: '#059669',
     centerNode: 'Project Name',
     children: [
-      { name: 'Goals', type: 'idea' },
-      { name: 'Tasks', type: 'thing' },
-      { name: 'Team', type: 'group' },
-      { name: 'Resources', type: 'thing' },
+      { name: 'Goals', type: 'idea', children: [
+        { name: 'Primary Goal', type: 'idea' },
+        { name: 'Milestones', type: 'event' },
+        { name: 'Success Metrics', type: 'note' },
+      ]},
+      { name: 'Tasks', type: 'thing', children: [
+        { name: 'To Do', type: 'thing' },
+        { name: 'In Progress', type: 'thing' },
+        { name: 'Done', type: 'thing' },
+        { name: 'Blocked', type: 'thing' },
+      ]},
+      { name: 'Team', type: 'group', children: [
+        { name: 'Lead', type: 'person' },
+        { name: 'Contributors', type: 'group' },
+        { name: 'Stakeholders', type: 'group' },
+      ]},
+      { name: 'Resources', type: 'thing', children: [
+        { name: 'Budget', type: 'note' },
+        { name: 'Tools', type: 'thing' },
+        { name: 'Documents', type: 'thing' },
+      ]},
+      { name: 'Timeline', type: 'event', children: [
+        { name: 'Phase 1', type: 'event' },
+        { name: 'Phase 2', type: 'event' },
+        { name: 'Deadline', type: 'event' },
+      ]},
+      { name: 'Risks', type: 'note' },
     ],
   },
   {
@@ -107,10 +211,33 @@ const MAP_TEMPLATES: MapTemplate[] = [
     color: '#0d9488',
     centerNode: 'My Area',
     children: [
-      { name: 'Neighbours', type: 'person' },
-      { name: 'Shops', type: 'place' },
-      { name: 'Services', type: 'place' },
-      { name: 'Parks', type: 'place' },
+      { name: 'Neighbours', type: 'group', children: [
+        { name: 'Left Side', type: 'person' },
+        { name: 'Right Side', type: 'person' },
+        { name: 'Across', type: 'person' },
+      ]},
+      { name: 'Food & Shops', type: 'place', children: [
+        { name: 'Supermarket', type: 'place' },
+        { name: 'Restaurants', type: 'place' },
+        { name: 'Cafes', type: 'place' },
+        { name: 'Takeaway', type: 'place' },
+      ]},
+      { name: 'Services', type: 'place', children: [
+        { name: 'Doctor', type: 'place' },
+        { name: 'Dentist', type: 'place' },
+        { name: 'Mechanic', type: 'place' },
+        { name: 'Post Office', type: 'place' },
+      ]},
+      { name: 'Outdoors', type: 'place', children: [
+        { name: 'Parks', type: 'place' },
+        { name: 'Walking Tracks', type: 'place' },
+        { name: 'Playgrounds', type: 'place' },
+      ]},
+      { name: 'Schools', type: 'place' },
+      { name: 'Transport', type: 'thing', children: [
+        { name: 'Bus Stops', type: 'place' },
+        { name: 'Train Station', type: 'place' },
+      ]},
     ],
   },
   {
@@ -122,10 +249,30 @@ const MAP_TEMPLATES: MapTemplate[] = [
     color: '#A78BFA',
     centerNode: 'My Idea',
     children: [
-      { name: 'Problem', type: 'note' },
-      { name: 'Solution', type: 'idea' },
-      { name: 'Audience', type: 'group' },
-      { name: 'Next Steps', type: 'thing' },
+      { name: 'Problem', type: 'note', children: [
+        { name: 'Pain Points', type: 'note' },
+        { name: 'Who Has It', type: 'group' },
+        { name: 'Current Solutions', type: 'note' },
+      ]},
+      { name: 'Solution', type: 'idea', children: [
+        { name: 'Core Concept', type: 'idea' },
+        { name: 'Key Features', type: 'idea' },
+        { name: 'Differentiator', type: 'idea' },
+      ]},
+      { name: 'Audience', type: 'group', children: [
+        { name: 'Primary Users', type: 'group' },
+        { name: 'Secondary Users', type: 'group' },
+      ]},
+      { name: 'Validation', type: 'thing', children: [
+        { name: 'Research', type: 'note' },
+        { name: 'Feedback', type: 'note' },
+        { name: 'Competitors', type: 'note' },
+      ]},
+      { name: 'Next Steps', type: 'thing', children: [
+        { name: 'MVP', type: 'thing' },
+        { name: 'Resources Needed', type: 'thing' },
+        { name: 'Timeline', type: 'event' },
+      ]},
       { name: 'Inspiration', type: 'idea' },
     ],
   },
@@ -168,6 +315,7 @@ function TemplatePicker({ onSelect, onBlank, onClose }: { onSelect: (template: M
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {MAP_TEMPLATES.map((t) => {
               const Icon = t.icon;
+              const totalNodes = t.children.reduce((sum, c) => sum + 1 + (c.children?.length || 0), 0);
               return (
                 <button
                   key={t.id}
@@ -182,11 +330,12 @@ function TemplatePicker({ onSelect, onBlank, onClose }: { onSelect: (template: M
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-lg">{t.emoji}</span>
                       <p className="font-headline font-bold text-sm text-on-surface">{t.name}</p>
+                      <span className="text-[10px] font-headline text-on-surface-variant/50">{totalNodes} nodes</span>
                     </div>
                     <p className="text-xs text-on-surface-variant leading-relaxed">{t.description}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {t.children.map((c) => (
-                        <span key={c.name} className="text-[10px] font-headline px-2 py-0.5 rounded-full" style={{ background: t.color + '12', color: t.color }}>{c.name}</span>
+                        <span key={c.name} className="text-[10px] font-headline px-2 py-0.5 rounded-full" style={{ background: t.color + '12', color: t.color }}>{c.name}{c.children ? ` +${c.children.length}` : ''}</span>
                       ))}
                     </div>
                   </div>
@@ -200,7 +349,7 @@ function TemplatePicker({ onSelect, onBlank, onClose }: { onSelect: (template: M
   );
 }
 
-// ─── Template Setup Modal (name the map before creating) ────────────
+// ─── Template Setup Modal ───────────────────────────────────────────
 function TemplateSetupModal({ template, onSave, onClose }: { template: MapTemplate; onSave: (data: { name: string; emoji: string; description: string; centerNode: string }) => void; onClose: () => void }) {
   const [name, setName] = useState(template.name);
   const [emoji, setEmoji] = useState(template.emoji);
@@ -208,7 +357,7 @@ function TemplateSetupModal({ template, onSave, onClose }: { template: MapTempla
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container-high w-full max-w-md mx-4 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container-high w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto custom-scrollbar animate-slide-up" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center p-5 border-b border-surface-container">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{emoji}</span>
@@ -221,7 +370,7 @@ function TemplateSetupModal({ template, onSave, onClose }: { template: MapTempla
             <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Icon</label>
             <div className="flex flex-wrap gap-2">
               {EMOJI_OPTIONS.map((e) => (
-                <button key={e} onClick={() => setEmoji(e)} className="w-10 h-10 rounded-xl text-xl flex items-center justify-center border-2 transition-all" style={{ borderColor: emoji === e ? template.color : 'transparent', background: emoji === e ? template.color + '10' : '#f0edec' }}>{e}</button>
+                <button key={e || 'none'} onClick={() => setEmoji(e)} className="w-10 h-10 rounded-xl text-xl flex items-center justify-center border-2 transition-all" style={{ borderColor: emoji === e ? template.color : 'transparent', background: emoji === e ? template.color + '10' : '#f0edec' }}>{e || '⊘'}</button>
               ))}
             </div>
           </div>
@@ -234,11 +383,23 @@ function TemplateSetupModal({ template, onSave, onClose }: { template: MapTempla
             <input value={centerNode} onChange={(e) => setCenterNode(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder={template.centerNode} />
           </div>
           <div>
-            <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Starter nodes</label>
-            <div className="flex flex-wrap gap-1.5">
+            <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Starter structure</label>
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
               {template.children.map((c) => {
                 const preset = getPresetForType(c.type);
-                return <span key={c.name} className="text-xs font-headline font-medium px-2.5 py-1 rounded-full" style={{ background: preset.outer_color + '15', color: preset.outer_color }}>{c.name}</span>;
+                return (
+                  <div key={c.name}>
+                    <span className="text-xs font-headline font-semibold px-2.5 py-1 rounded-full inline-block" style={{ background: preset.outer_color + '15', color: preset.outer_color }}>{c.name}</span>
+                    {c.children && c.children.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1 ml-4">
+                        {c.children.map((gc) => {
+                          const gp = getPresetForType(gc.type);
+                          return <span key={gc.name} className="text-[10px] font-headline px-2 py-0.5 rounded-full" style={{ background: gp.outer_color + '10', color: gp.outer_color }}>{gc.name}</span>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
               })}
             </div>
           </div>
@@ -252,7 +413,7 @@ function TemplateSetupModal({ template, onSave, onClose }: { template: MapTempla
   );
 }
 
-// ─── Create/Edit Map Modal (for blank maps and editing) ─────────────
+// ─── Create/Edit Map Modal ──────────────────────────────────────────
 function MapModal({ initial, onSave, onClose }: { initial?: MapRecord; onSave: (data: { name: string; emoji: string; description: string }) => void; onClose: () => void }) {
   const [name, setName] = useState(initial?.name || '');
   const [emoji, setEmoji] = useState(initial?.emoji || '🗺️');
@@ -270,7 +431,7 @@ function MapModal({ initial, onSave, onClose }: { initial?: MapRecord; onSave: (
             <label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Icon</label>
             <div className="flex flex-wrap gap-2">
               {EMOJI_OPTIONS.map((e) => (
-                <button key={e} onClick={() => setEmoji(e)} className="w-10 h-10 rounded-xl text-xl flex items-center justify-center border-2 transition-all" style={{ borderColor: emoji === e ? '#3525cd' : 'transparent', background: emoji === e ? '#3525cd10' : '#f0edec' }}>{e}</button>
+                <button key={e || 'none'} onClick={() => setEmoji(e)} className="w-10 h-10 rounded-xl text-xl flex items-center justify-center border-2 transition-all" style={{ borderColor: emoji === e ? '#3525cd' : 'transparent', background: emoji === e ? '#3525cd10' : '#f0edec' }}>{e || '⊘'}</button>
               ))}
             </div>
           </div>
@@ -285,9 +446,7 @@ function MapModal({ initial, onSave, onClose }: { initial?: MapRecord; onSave: (
         </div>
         <div className="flex gap-3 p-5 border-t border-surface-container">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition">Cancel</button>
-          <button onClick={() => { if (!name.trim()) return; onSave({ name: name.trim(), emoji, description: description.trim() }); }} disabled={!name.trim()} className="flex-1 silk-gradient text-white py-3 rounded-xl font-headline font-bold text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-40">
-            {initial ? 'Save Changes' : 'Create Map'}
-          </button>
+          <button onClick={() => { if (!name.trim()) return; onSave({ name: name.trim(), emoji, description: description.trim() }); }} disabled={!name.trim()} className="flex-1 silk-gradient text-white py-3 rounded-xl font-headline font-bold text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-40">{initial ? 'Save Changes' : 'Create Map'}</button>
         </div>
       </div>
     </div>
@@ -415,21 +574,39 @@ export default function MyMapsPage() {
     }).select().single();
 
     if (rootNode) {
-      // Create starter child nodes
-      const childInserts = selectedTemplate.children.map((child) => {
-        const preset = getPresetForType(child.type);
+      // Helper to build node data with circle-in-circle style
+      const buildTemplateNode = (name: string, type: string, parentId: string) => {
+        const preset = getPresetForType(type);
         return {
-          user_id: user.id, map_id: mapId, parent_id: rootNode.id,
-          name: child.name, type: child.type, hint: null, description: null, address: null, relationship: null,
+          user_id: user.id, map_id: mapId, parent_id: parentId,
+          name, type, hint: null, description: null, address: null, relationship: null,
           meta: {}, position_x: null, position_y: null,
-          color: preset.outer_color, display_mode: preset.display_mode, shape: preset.outer_shape, abc: child.name.charAt(0).toUpperCase(),
-          outer_shape: preset.outer_shape, outer_color: preset.outer_color, outer_size: preset.outer_size, outer_solid: preset.outer_solid,
-          inner_shape: preset.inner_shape, inner_color: preset.inner_color, inner_size: preset.inner_size, inner_solid: preset.inner_solid,
+          color: preset.outer_color, display_mode: 'shape' as const, shape: 'circle',
+          abc: name.charAt(0).toUpperCase(),
+          outer_shape: 'circle', outer_color: preset.outer_color, outer_size: 28, outer_solid: false,
+          inner_shape: 'circle', inner_color: preset.outer_color, inner_size: 5, inner_solid: true,
           image_url: null, tags: [],
         };
-      });
+      };
 
-      await supabase.from('map_nodes').insert(childInserts);
+      // Create children
+      const childInserts = selectedTemplate.children.map((child) => buildTemplateNode(child.name, child.type, rootNode.id));
+      const { data: childNodes } = await supabase.from('map_nodes').insert(childInserts).select();
+
+      // Create grandchildren
+      if (childNodes) {
+        const grandchildInserts: any[] = [];
+        selectedTemplate.children.forEach((child, i) => {
+          if (child.children && childNodes[i]) {
+            child.children.forEach((gc) => {
+              grandchildInserts.push(buildTemplateNode(gc.name, gc.type, childNodes[i].id));
+            });
+          }
+        });
+        if (grandchildInserts.length > 0) {
+          await supabase.from('map_nodes').insert(grandchildInserts);
+        }
+      }
     }
 
     setSelectedTemplate(null);
@@ -447,7 +624,7 @@ export default function MyMapsPage() {
   if (userLoading || mapsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-surface-container-high border-t-primary rounded-full animate-spin" />
+        <NoddicLoader size={48} />
       </div>
     );
   }
