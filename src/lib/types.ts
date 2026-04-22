@@ -37,6 +37,7 @@ export interface MapNode {
   inner_size: number | null;
   inner_solid: boolean | null;
   image_url: string | null;
+  tags: string[];
   created_at: string;
   updated_at: string;
 }

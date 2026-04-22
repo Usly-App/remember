@@ -22,7 +22,7 @@ import {
   getNodeAbc,
 } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock, Palette, Search, ChevronDown, ChevronLeft, ImagePlus, Trash } from 'lucide-react';
+import { Plus, X, ChevronRight, Pencil, Trash2, ZoomIn, ZoomOut, Locate, Lock, Unlock, Palette, Search, ChevronDown, ChevronLeft, ImagePlus, Trash, Tag, Download } from 'lucide-react';
 
 const isDarkBg = (color?: string | null) => ['#1c1b1b', '#0f172a', '#27272a', '#111827'].includes(color || '');
 
@@ -60,6 +60,28 @@ function ImageUploadButton({ userId, nodeId, currentUrl, onUploaded }: { userId:
       {currentUrl && <div className="relative rounded-xl overflow-hidden border border-surface-container-high"><img src={currentUrl} alt="Node" className="w-full h-32 object-cover" /><button onClick={handleRemove} disabled={uploading} className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition"><Trash size={14} /></button></div>}
       <button onClick={() => inputRef.current?.click()} disabled={uploading} className="w-full py-2.5 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition flex items-center justify-center gap-2 disabled:opacity-50"><ImagePlus size={14} /> {uploading ? 'Uploading…' : currentUrl ? 'Change Image' : 'Add Image'}</button>
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+    </div>
+  );
+}
+
+// ─── Tag Input ──────────────────────────────────────────────────────
+function TagInput({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
+  const [input, setInput] = useState('');
+  const add = () => { const t = input.trim().toLowerCase(); if (t && !tags.includes(t)) { onChange([...tags, t]); } setInput(''); };
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {tags.map((tag) => (
+          <span key={tag} className="inline-flex items-center gap-1 text-xs font-headline font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            {tag}
+            <button onClick={() => onChange(tags.filter((t) => t !== tag))} className="hover:text-error transition"><X size={10} /></button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} className="flex-1 px-3 py-2 rounded-xl border border-outline-variant bg-white text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder="Add tag…" />
+        <button onClick={add} disabled={!input.trim()} className="px-3 py-2 rounded-xl text-xs font-headline font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition disabled:opacity-30">Add</button>
+      </div>
     </div>
   );
 }
@@ -244,6 +266,7 @@ function AddNodeModal({ parentNode, settings, onAdd, onClose }: { parentNode: Ma
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [relationship, setRelationship] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const parentColor = getNodeOuterColor(parentNode, settings);
 
   useEffect(() => {
@@ -265,10 +288,11 @@ function AddNodeModal({ parentNode, settings, onAdd, onClose }: { parentNode: Ma
           <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition resize-y min-h-[60px]" placeholder="Optional details" /></div>
           {nf.form.type === 'place' && <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Address</label><input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder="Address" /></div>}
           {nf.form.type === 'person' && <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Relationship</label><input value={relationship} onChange={(e) => setRelationship(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Friend, colleague" /></div>}
+          <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Tags</label><TagInput tags={tags} onChange={setTags} /></div>
         </div>
         <div className="flex gap-3 p-5 border-t border-surface-container">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl font-headline font-semibold text-sm border border-outline-variant text-on-surface-variant hover:bg-surface-container transition">Cancel</button>
-          <button onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), type: nf.form.type, hint: hint || null, description: description || null, address: address || null, relationship: relationship || null, displayMode: nf.form.displayMode, outerShape: nf.form.outerShape, outerColor: nf.form.outerColor, outerSize: nf.form.outerSize, outerSolid: nf.form.outerSolid, innerShape: nf.form.innerShape, innerColor: nf.form.innerColor, innerSize: nf.form.innerSize, innerSolid: nf.form.innerSolid, abc: nf.form.abc || name.charAt(0).toUpperCase() }); }} disabled={!name.trim()} className="flex-1 text-white py-3 rounded-xl font-headline font-bold text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-40" style={{ background: `linear-gradient(135deg, ${nf.form.outerColor}, ${nf.form.outerColor}dd)` }}>Add</button>
+          <button onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), type: nf.form.type, hint: hint || null, description: description || null, address: address || null, relationship: relationship || null, tags, displayMode: nf.form.displayMode, outerShape: nf.form.outerShape, outerColor: nf.form.outerColor, outerSize: nf.form.outerSize, outerSolid: nf.form.outerSolid, innerShape: nf.form.innerShape, innerColor: nf.form.innerColor, innerSize: nf.form.innerSize, innerSolid: nf.form.innerSolid, abc: nf.form.abc || name.charAt(0).toUpperCase() }); }} disabled={!name.trim()} className="flex-1 text-white py-3 rounded-xl font-headline font-bold text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-40" style={{ background: `linear-gradient(135deg, ${nf.form.outerColor}, ${nf.form.outerColor}dd)` }}>Add</button>
         </div>
       </div>
     </div>
@@ -326,7 +350,7 @@ function QuickAddModal({ nodes, settings, onAdd, onClose }: { nodes: MapNode[]; 
 // ─── Node Detail Panel ──────────────────────────────────────────────
 function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChild, onResetPosition, onToggleCollapse, onClose }: { node: MapNode; nodes: MapNode[]; settings: UserSettings | null; userId: string; onUpdate: (id: string, data: Partial<MapNode>) => void; onDelete: (id: string) => void; onAddChild: (parentId: string) => void; onResetPosition: (id: string) => void; onToggleCollapse: (id: string) => void; onClose: () => void }) {
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: node.name, hint: node.hint || '', description: node.description || '', address: node.address || '', relationship: node.relationship || '' });
+  const [form, setForm] = useState({ name: node.name, hint: node.hint || '', description: node.description || '', address: node.address || '', relationship: node.relationship || '', tags: node.tags || [] as string[] });
   const isRoot = !node.parent_id;
   const nf = useNodeForm({ type: node.type, displayMode: getNodeDisplayMode(node), outerShape: getNodeOuterShape(node), outerColor: getNodeOuterColor(node, settings), outerSize: getNodeOuterSize(node, isRoot), outerSolid: getNodeOuterSolid(node, isRoot), innerShape: getNodeInnerShape(node), innerColor: getNodeInnerColor(node, settings), innerSize: getNodeInnerSize(node, isRoot), innerSolid: getNodeInnerSolid(node), abc: getNodeAbc(node) });
   const nodeColor = getNodeOuterColor(node, settings);
@@ -335,14 +359,14 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
   const hasCustomPosition = node.position_x != null && node.position_y != null;
 
   useEffect(() => {
-    setForm({ name: node.name, hint: node.hint || '', description: node.description || '', address: node.address || '', relationship: node.relationship || '' });
+    setForm({ name: node.name, hint: node.hint || '', description: node.description || '', address: node.address || '', relationship: node.relationship || '', tags: node.tags || [] });
     setEditing(false);
     nf.setForm({ type: node.type, displayMode: getNodeDisplayMode(node), outerShape: getNodeOuterShape(node), outerColor: getNodeOuterColor(node, settings), outerSize: getNodeOuterSize(node, isRoot), outerSolid: getNodeOuterSolid(node, isRoot), innerShape: getNodeInnerShape(node), innerColor: getNodeInnerColor(node, settings), innerSize: getNodeInnerSize(node, isRoot), innerSolid: getNodeInnerSolid(node), abc: getNodeAbc(node) });
     nf.setCustomMode(false);
   }, [node, settings]);
 
   const handleSave = () => {
-    onUpdate(node.id, { name: form.name, type: nf.form.type, hint: form.hint || null, description: form.description || null, address: form.address || null, relationship: form.relationship || null, display_mode: nf.form.displayMode, outer_shape: nf.form.outerShape, outer_color: nf.form.outerColor, outer_size: nf.form.outerSize, outer_solid: nf.form.outerSolid, inner_shape: nf.form.innerShape, inner_color: nf.form.innerColor, inner_size: nf.form.innerSize, inner_solid: nf.form.innerSolid, abc: nf.form.abc, color: nf.form.outerColor, shape: nf.form.outerShape });
+    onUpdate(node.id, { name: form.name, type: nf.form.type, hint: form.hint || null, description: form.description || null, address: form.address || null, relationship: form.relationship || null, tags: form.tags || [], display_mode: nf.form.displayMode, outer_shape: nf.form.outerShape, outer_color: nf.form.outerColor, outer_size: nf.form.outerSize, outer_solid: nf.form.outerSolid, inner_shape: nf.form.innerShape, inner_color: nf.form.innerColor, inner_size: nf.form.innerSize, inner_solid: nf.form.innerSolid, abc: nf.form.abc, color: nf.form.outerColor, shape: nf.form.outerShape });
     setEditing(false);
   };
 
@@ -369,6 +393,7 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
             </div>
             {detailRows.filter((r) => r.value).map((r) => (<div key={r.label} className="mb-4"><span className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1">{r.label}</span><p className="text-on-surface text-sm leading-relaxed">{r.value}</p></div>))}
             <div className="mb-4"><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Image</label><ImageUploadButton userId={userId} nodeId={node.id} currentUrl={node.image_url} onUploaded={(url) => onUpdate(node.id, { image_url: url })} /></div>
+            {node.tags && node.tags.length > 0 && (<div className="mb-4"><span className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Tags</span><div className="flex flex-wrap gap-1.5">{node.tags.map((tag) => (<span key={tag} className="inline-flex items-center gap-1 text-xs font-headline font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary"><Tag size={10} /> {tag}</span>))}</div></div>)}
             {children.length > 0 && (<div className="mt-6"><span className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Connections ({children.length})</span><div className="flex flex-wrap gap-2">{children.map((c) => { const cc = getNodeOuterColor(c, settings); return <span key={c.id} className="inline-flex items-center gap-1.5 text-xs font-headline font-medium px-3 py-1.5 rounded-full border" style={{ borderColor: cc + '40', color: cc }}><ShapePreview shape={getNodeOuterShape(c)} color={cc} size={12} /> {c.name}</span>; })}</div></div>)}
           </>
         ) : (
@@ -379,6 +404,7 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
             <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Description</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition resize-y min-h-[60px]" placeholder="Notes" /></div>
             {(nf.form.type === 'place' || node.type === 'place') && <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Address</label><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder="Address" /></div>}
             {(nf.form.type === 'person' || node.type === 'person') && <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Relationship</label><input value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white text-on-surface font-body focus:outline-none focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Friend" /></div>}
+            <div><label className="block text-xs font-headline font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Tags</label><TagInput tags={form.tags || []} onChange={(t) => setForm({ ...form, tags: t })} /></div>
           </div>
         )}
       </div>
@@ -412,7 +438,7 @@ function SearchOverlay({ nodes, settings, open, onClose, onSelect }: { nodes: Ma
   const results = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    return nodes.filter((n) => n.name.toLowerCase().includes(q) || (n.hint && n.hint.toLowerCase().includes(q)) || (n.description && n.description.toLowerCase().includes(q)) || n.type.toLowerCase().includes(q)).slice(0, 8);
+    return nodes.filter((n) => n.name.toLowerCase().includes(q) || (n.hint && n.hint.toLowerCase().includes(q)) || (n.description && n.description.toLowerCase().includes(q)) || n.type.toLowerCase().includes(q) || (n.tags && n.tags.some((t) => t.toLowerCase().includes(q)))).slice(0, 8);
   }, [query, nodes]);
 
   useEffect(() => { if (open && inputRef.current) inputRef.current.focus(); }, [open]);
@@ -759,7 +785,7 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ touchAction: 'none', background: settings?.map_bg_color || '#fcf9f8' }}>
       <svg
         ref={svgRef}
-        className="w-full h-full"
+        className="w-full h-full map-canvas-svg"
         style={{ cursor: draggingNodeId || draggingCanvas ? 'grabbing' : 'grab', touchAction: 'none' }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
@@ -892,6 +918,79 @@ export default function MapCanvasPage() {
     setCollapsedIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }, []);
 
+  const handleExportPdf = useCallback(async () => {
+    const svgEl = document.querySelector('.map-canvas-svg') as SVGSVGElement | null;
+    if (!svgEl) return;
+
+    // Calculate bounds of all nodes
+    const allPos = Object.values(positions);
+    if (allPos.length === 0) return;
+
+    const padding = 100;
+    const minX = Math.min(...allPos.map((p) => p.x)) - padding;
+    const minY = Math.min(...allPos.map((p) => p.y)) - padding;
+    const maxX = Math.max(...allPos.map((p) => p.x)) + padding;
+    const maxY = Math.max(...allPos.map((p) => p.y)) + padding;
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    // Clone SVG and adjust viewBox to fit all nodes
+    const clone = svgEl.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute('width', String(width));
+    clone.setAttribute('height', String(height));
+    clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    // Remove the grid background
+    const defs = clone.querySelector('defs');
+    if (defs) defs.remove();
+    const bgRect = clone.querySelector('rect');
+    if (bgRect) bgRect.setAttribute('fill', settings?.map_bg_color || '#fcf9f8');
+
+    // Adjust the transform group to fit
+    const gEl = clone.querySelector('g');
+    if (gEl) gEl.setAttribute('transform', `translate(${-minX}, ${-minY})`);
+
+    const { jsPDF } = await import('jspdf');
+    const { svg2pdf } = await import('svg2pdf.js');
+
+    const isLandscape = width > height;
+    const pdf = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'pt', format: [width, height] });
+
+    // Set background
+    const bgColor = settings?.map_bg_color || '#fcf9f8';
+    const hex = bgColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    pdf.setFillColor(r, g, b);
+    pdf.rect(0, 0, width, height, 'F');
+
+    // Add a temporary container for the SVG
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    try {
+      await svg2pdf(clone, pdf, { x: 0, y: 0, width, height });
+      pdf.save(`${currentMap?.name || 'map'}.pdf`);
+    } catch (err) {
+      console.error('PDF export error:', err);
+      // Fallback: download as SVG
+      const svgData = new XMLSerializer().serializeToString(clone);
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentMap?.name || 'map'}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      document.body.removeChild(container);
+    }
+  }, [positions, settings, currentMap]);
+
   const handleSearchSelect = useCallback((id: string) => {
     const toUncollapse = new Set<string>();
     let cur = nodes.find((n) => n.id === id);
@@ -916,7 +1015,7 @@ export default function MapCanvasPage() {
           parent_id: null, map_id: mapId, name, type: 'user', hint: null, description: null, address: null, relationship: null, meta: {}, position_x: null, position_y: null,
           color: settings?.accent_color || '#3525cd', display_mode: 'abc', shape: 'circle', abc: name.charAt(0).toUpperCase(),
           outer_shape: 'circle', outer_color: settings?.accent_color || '#3525cd', outer_size: 38, outer_solid: true,
-          inner_shape: 'circle', inner_color: '#ffffff', inner_size: 16, inner_solid: true, image_url: null,
+          inner_shape: 'circle', inner_color: '#ffffff', inner_size: 16, inner_solid: true, image_url: null, tags: [],
         });
       }} />
     );
@@ -928,7 +1027,7 @@ export default function MapCanvasPage() {
     meta: {}, position_x: null, position_y: null,
     color: data.outerColor, display_mode: data.displayMode, shape: data.outerShape, abc: data.abc || data.name.charAt(0).toUpperCase(),
     outer_shape: data.outerShape, outer_color: data.outerColor, outer_size: data.outerSize, outer_solid: data.outerSolid,
-    inner_shape: data.innerShape, inner_color: data.innerColor, inner_size: data.innerSize, inner_solid: data.innerSolid, image_url: null,
+    inner_shape: data.innerShape, inner_color: data.innerColor, inner_size: data.innerSize, inner_solid: data.innerSolid, image_url: null, tags: data.tags || [],
   });
 
   return (
@@ -955,6 +1054,9 @@ export default function MapCanvasPage() {
         </button>
         <button onClick={() => setSearchOpen(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
           <Search size={15} />
+        </button>
+        <button onClick={handleExportPdf} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
+          <Download size={15} />
         </button>
       </div>
 
