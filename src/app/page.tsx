@@ -40,7 +40,7 @@ export default function HomePage() {
               </h1>
               <p className="text-on-surface-variant text-lg md:text-xl max-w-lg mb-12 leading-relaxed mx-auto lg:mx-0">
                 Noddic is a visual mind map for everything you want to remember.
-                People, places, ideas, projects — map them out, connect them
+                People, places, ideas, projects - map them out, connect them
                 together, and never lose track again.
               </p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
@@ -315,7 +315,7 @@ export default function HomePage() {
               Get Started Free
             </Link>
             <p className="mt-10 text-on-surface-variant text-sm font-label uppercase tracking-widest">
-              Free forever for personal use
+              Free for personal use
             </p>
           </div>
         </section>
