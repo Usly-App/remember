@@ -373,7 +373,7 @@ function NodePanel({ node, nodes, settings, userId, onUpdate, onDelete, onAddChi
   const detailRows = [{ label: 'Type', value: node.type.charAt(0).toUpperCase() + node.type.slice(1) }, { label: 'Hint', value: node.hint }, { label: 'Description', value: node.description }, { label: 'Address', value: node.address }, { label: 'Relationship', value: node.relationship }];
 
   return (
-    <div className="absolute top-0 right-0 w-[380px] max-w-[90vw] h-full bg-surface-container-lowest border-l border-surface-container-high z-40 flex flex-col animate-slide-right shadow-2xl">
+    <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 sm:w-[380px] sm:max-w-[90vw] sm:h-full bg-surface-container-lowest sm:border-l border-surface-container-high z-40 flex flex-col animate-slide-right shadow-2xl">
       <div className="flex items-center justify-between p-5 border-b border-surface-container">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 text-xs font-headline font-bold uppercase tracking-wider px-3 py-1 rounded-full" style={{ background: nodeColor + '18', color: nodeColor }}>
@@ -1035,27 +1035,27 @@ export default function MapCanvasPage() {
       <MapCanvas nodes={nodes} positions={positions} selectedId={selectedId} highlightId={highlightId} settings={settings} dragEnabled={dragEnabled} collapsedIds={collapsedIds} childCountMap={childCountMap} onSelectNode={setSelectedId} onDragNode={handleDragNode} onToggleCollapse={handleToggleCollapse} />
 
       {/* Toolbar — single row */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2 flex-wrap">
-        <button onClick={() => router.push('/map')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <button onClick={() => router.push('/map')} className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
           <ChevronLeft size={15} />
         </button>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-lowest/90 border border-surface-container-high shadow-sm">
-          <span className="text-lg">{currentMap.emoji}</span>
-          <span className="font-headline font-bold text-sm text-on-surface">{currentMap.name}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-surface-container-lowest/90 border border-surface-container-high shadow-sm">
+          <span className="text-base sm:text-lg">{currentMap.emoji}</span>
+          <span className="font-headline font-bold text-xs sm:text-sm text-on-surface truncate max-w-[100px] sm:max-w-none">{currentMap.name}</span>
         </div>
         <div className="w-px h-6 bg-surface-container-high hidden sm:block" />
-        <button onClick={() => setDragEnabled(!dragEnabled)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm transition-all ${dragEnabled ? 'bg-primary text-white border-primary shadow-md' : 'bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary'}`}>
+        <button onClick={() => setDragEnabled(!dragEnabled)} className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-headline font-semibold border shadow-sm transition-all ${dragEnabled ? 'bg-primary text-white border-primary shadow-md' : 'bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary'}`}>
           {dragEnabled ? <Unlock size={15} /> : <Lock size={15} />}
           <span className="hidden sm:inline">{dragEnabled ? 'Moving' : 'Move'}</span>
         </button>
-        <button onClick={() => setQuickAddOpen(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
+        <button onClick={() => setQuickAddOpen(true)} className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
           <Plus size={15} />
           <span className="hidden sm:inline">Add</span>
         </button>
-        <button onClick={() => setSearchOpen(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
+        <button onClick={() => setSearchOpen(true)} className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
           <Search size={15} />
         </button>
-        <button onClick={handleExportPdf} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
+        <button onClick={handleExportPdf} className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-headline font-semibold border shadow-sm bg-surface-container-lowest border-surface-container-high text-on-surface-variant hover:text-primary transition-all">
           <Download size={15} />
         </button>
       </div>
