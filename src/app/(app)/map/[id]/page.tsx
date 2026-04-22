@@ -782,7 +782,7 @@ function MapCanvas({ nodes, positions, selectedId, highlightId, settings, dragEn
   const darkBg = isDarkBg(settings?.map_bg_color);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ touchAction: 'none', background: settings?.map_bg_color || '#fcf9f8' }}>
+    <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ touchAction: 'none', background: settings?.map_bg_color || '#fcf9f8' }}>
       <svg
         ref={svgRef}
         className="w-full h-full map-canvas-svg"
@@ -1031,7 +1031,7 @@ export default function MapCanvasPage() {
   });
 
   return (
-    <div className="relative flex-1 h-full overflow-hidden">
+    <div className="relative flex-1 overflow-hidden">
       <MapCanvas nodes={nodes} positions={positions} selectedId={selectedId} highlightId={highlightId} settings={settings} dragEnabled={dragEnabled} collapsedIds={collapsedIds} childCountMap={childCountMap} onSelectNode={setSelectedId} onDragNode={handleDragNode} onToggleCollapse={handleToggleCollapse} />
 
       {/* Toolbar — single row */}
